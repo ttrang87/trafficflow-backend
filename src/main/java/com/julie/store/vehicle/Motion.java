@@ -57,8 +57,12 @@ public abstract class Motion {
 
     public int getY() { return this.y;}
 
+    public int getSpeed() { return this.speed; }
+
 
     public void goStraight() {
+        System.out.println("Vehicle at [" + x + ", " + y + "] moving with direction " + direction + " and speed " + speed);
+
         if (outPosition) {
             turnDistance += speed;
         }
@@ -67,9 +71,9 @@ public abstract class Motion {
         } else if (direction == 3) {
             x -= speed;
         } else if (direction == 0) {
-            y += speed;
-        } else {
             y -= speed;
+        } else {
+            y += speed;
         }
     }
 
@@ -84,18 +88,18 @@ public abstract class Motion {
     }
 
     public void slow() {
-        speed -= 10;
+        speed /= 2;
         goStraight();
     }
 
     //for behind vehicles
-    public void moveSafe() {
-        if (dangerousDistance <= 10) {
+    public void moveSafe(int speed) {
+        if (dangerousDistance <= speed / 2) {
             stop();
-        } else if (dangerousDistance < 30) {
+        } else if (dangerousDistance < speed) {
             slow();
         } else {
-            goStraight();
+            run();
         }
     }
 
@@ -113,12 +117,11 @@ public abstract class Motion {
 
     //for the first vehicle only
     public void moveOut() {
-        speed = initialSpeed;
         if (relationship.equals("RIGHT") && turnDistance == 60) {
             turnRight();
         } else if (relationship.equals("LEFT") && turnDistance == 150){
             turnLeft();
         }
-        goStraight();
+        run();
     }
 }

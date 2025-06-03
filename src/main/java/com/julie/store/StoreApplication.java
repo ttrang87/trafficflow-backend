@@ -6,6 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,9 +29,10 @@ public class StoreApplication {
 		return "index.html";
 	}
 
-	@PostConstruct
-	public void init() {
+	@GetMapping("/start-simulation")
+	public String startSimulation() {
 		roadService.startSimulation();
+		return "Simulation started";
 	}
 }
 

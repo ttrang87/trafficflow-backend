@@ -15,7 +15,10 @@ public class CenterArea {
         centerArea.add(vehicle);
     }
 
-    @Async
+    public List<Vehicle> getCenterArea() {
+        return centerArea;
+    }
+
     public void operate() {
         while(true) {
             try {

@@ -4,6 +4,7 @@ import com.julie.store.SimulationLauncher;
 import com.julie.store.TrafficLight;
 import com.julie.store.vehicle.CarBrand;
 import com.julie.store.vehicle.Vehicle;
+import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 
@@ -24,13 +26,17 @@ public class RoadService {
     private final Road west;
     private final SimulationLauncher simulationLauncher;
     private final Random random = new Random();
+    private final CenterArea centerArea;
+    private final ScheduledExecutorService executorService;
 
     public RoadService(CenterArea centerArea, SimulationLauncher simulationLauncher) {
+        this.centerArea = centerArea;
         this.north = new Road(RoadSize.NorthSize, new TrafficLight("GREEN", 7, 0), centerArea);
         this.east = new Road(RoadSize.EastSize, new TrafficLight("RED", 30, 20), centerArea);
         this.south = new Road(RoadSize.SouthSize, new TrafficLight("RED", 30, 10), centerArea);
         this.west = new Road(RoadSize.WestSize, new TrafficLight("RED", 30, 0), centerArea);
         this.simulationLauncher = simulationLauncher;
+        this.executorService = Executors.newSingleThreadScheduledExecutor();
     }
 
     public void randomAddVehicle() {
@@ -38,6 +44,7 @@ public class RoadService {
         if (!add) {
             return;
         }
+
         List<Road> allRoads = List.of(north, east, south, west);
         Road sourceRoad = allRoads.get(random.nextInt(allRoads.size()));
 
@@ -52,25 +59,43 @@ public class RoadService {
         int indexRoad = size.ordinal();
 
         if (indexRoad == 0) {
-            newX = size.getXLeft() + 15;
-            newY = size.getYUp();
+            newX = size.getXLeft() + 30;
+            newY = size.getYUp() + 30;
         } else if (indexRoad == 1) {
-            newX = size.getXRight();
-            newY = size.getYUp() - 15;
+            newX = size.getXRight() - 30;
+            newY = size.getYUp() + 30;
         } else if (indexRoad == 2) {
-            newX = size.getXRight() - 15;
-            newY = size.getYDown();
+            newX = size.getXRight() - 30;
+            newY = size.getYDown() - 30;
         } else {
-            newX = size.getXLeft();
-            newY = size.getYDown() + 15;
+            newX = size.getXLeft() + 30;
+            newY = size.getYDown() - 30;
         }
 
-        int indexCar = random.nextInt(0,9);
+        if (!sourceRoad.getRightLane().isEmpty()) {
+            Vehicle lastVehicle = sourceRoad.getRightLane().getLast();
+            int lastX = lastVehicle.getX();
+            int lastY = lastVehicle.getY();
+            int length = 80;
+            if (lastVehicle.getBrand() == CarBrand.FireTruck || lastVehicle.getBrand() == CarBrand.MiniVan || lastVehicle.getBrand() == CarBrand.Police) {
+                length = 100;
+            }
+            if (
+                    (indexRoad == 0 && lastY - newY < length) ||
+                            (indexRoad == 1 && newX - lastX < length) ||
+                            (indexRoad == 2 && newY - lastY < length) ||
+                            (indexRoad == 3 && lastX - newX < length)
+            ) {
+                return;
+            }
+
+        }
+
+        int indexCar = random.nextInt(0, 7);
         Vehicle newVehicle = new Vehicle(newX, newY, sourceRoad, goalRoad, CarBrand.values()[indexCar]);
 
         sourceRoad.addVehicle(newVehicle);
     }
-
 
 
     public Map<String, Map<String, Integer>> getRoadCoordinates() {
@@ -100,38 +125,59 @@ public class RoadService {
         );
     }
 
+    public Map<String, List<Vehicle>> getCar() {
+        return Map.of(
+                "North", north.getRightLane(),
+                "East", east.getRightLane(),
+                "South", south.getRightLane(),
+                "West", west.getRightLane(),
+                "CenterArea", centerArea.getCenterArea()
+        );
+    }
+
     public void startSimulation() {
-        System.out.println("Hi this is start simulation");
+        System.out.println("Starting simulation");
 
         simulationLauncher.startAddingVehicles(this);
-
         simulationLauncher.startCountdown(north.getLight());
         simulationLauncher.startCountdown(east.getLight());
         simulationLauncher.startCountdown(south.getLight());
         simulationLauncher.startCountdown(west.getLight());
-
+        simulationLauncher.startOperate(west);
         simulationLauncher.startOperate(north);
         simulationLauncher.startOperate(east);
         simulationLauncher.startOperate(south);
-        simulationLauncher.startOperate(west);
+        simulationLauncher.startCenter(centerArea);
 
-
-
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
-            System.out.println("---- Current Traffic Light Colors ----");
-            System.out.println("North: " + north.getLight().getColor() + " - Second: " + north.getLight().getCount());
-            System.out.println("East: " + east.getLight().getColor() + " - Second: " + east.getLight().getCount());
-            System.out.println("South: " + south.getLight().getColor() + " - Second: " + south.getLight().getCount());
-            System.out.println("West: " + west.getLight().getColor() + " - Second: " + west.getLight().getCount());
+        executorService.scheduleAtFixedRate(() -> {
             System.out.println("---- Vehicles on each road ----");
-            System.out.println("North: " + north.getRightLane());
-            System.out.println("East: " + east.getRightLane());
-            System.out.println("South: " + south.getRightLane());
-            System.out.println("West: " + west.getRightLane());
-
+            System.out.println("North: " + north.getRightLaneCoordinates());
+            System.out.println("East: " + east.getRightLaneCoordinates());
+            System.out.println("South: " + south.getRightLaneCoordinates());
+            System.out.println("West: " + west.getRightLaneCoordinates());
             System.out.println("--------------------------------------");
         }, 0, 1, TimeUnit.SECONDS);
+
+        // Optional: Block the main thread for non-web environments
+        try {
+            Thread.sleep(Long.MAX_VALUE); // Keeps the application alive
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            executorService.shutdownNow();
+            System.out.println("Simulation interrupted");
+        }
     }
 
+    @PreDestroy
+    public void shutdown() {
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executorService.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+    }
 }
-
