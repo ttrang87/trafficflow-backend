@@ -2,6 +2,7 @@ package com.julie.store.road;
 
 import com.julie.store.SimulationLauncher;
 import com.julie.store.TrafficLight;
+import com.julie.store.lane.Lane;
 import com.julie.store.vehicle.CarBrand;
 import com.julie.store.vehicle.Vehicle;
 import jakarta.annotation.PreDestroy;
@@ -53,48 +54,72 @@ public class RoadService {
             goalRoad = allRoads.get(random.nextInt(allRoads.size()));
         } while (goalRoad == sourceRoad);
 
-
         RoadSize size = sourceRoad.getRoadSize();
         int newX, newY;
         int indexRoad = size.ordinal();
+        int relationship = (indexRoad - goalRoad.getRoadSize().ordinal() + 4) % 4;
 
         if (indexRoad == 0) {
-            newX = size.getXLeft() + 30;
-            newY = size.getYUp() + 30;
+            if (relationship == 1) {
+                newX = size.getXLeft() + 15;
+            } else {
+                newX = size.getXLeft() + 45;
+            }
+            newY = size.getYUp() + 35;
         } else if (indexRoad == 1) {
-            newX = size.getXRight() - 30;
-            newY = size.getYUp() + 30;
+            if (relationship == 1) {
+                newY = size.getYUp() + 15;
+            } else {
+                newY = size.getYUp() + 45;
+            }
+            newX = size.getXRight() - 35;
         } else if (indexRoad == 2) {
-            newX = size.getXRight() - 30;
-            newY = size.getYDown() - 30;
+            if (relationship == 1) {
+                newX = size.getXRight() - 15;
+            } else {
+                newX = size.getXRight() - 45;
+            }
+            newY = size.getYDown() - 35;
         } else {
-            newX = size.getXLeft() + 30;
-            newY = size.getYDown() - 30;
+            if (relationship == 1) {
+                newY = size.getYDown() - 15;
+            } else {
+                newY = size.getYDown() - 45;
+            }
+            newX = size.getXLeft() + 35;
         }
 
-        if (!sourceRoad.getRightLane().isEmpty()) {
-            Vehicle lastVehicle = sourceRoad.getRightLane().getLast();
+        boolean check;
+        if (relationship == 1) {
+            check = verifyAdd(sourceRoad.getRightMost(), indexRoad, newX, newY);
+        } else {
+            check = verifyAdd(sourceRoad.getRightMiddle(), indexRoad, newX, newY);
+        }
+
+        if (check) {
+            int indexCar = random.nextInt(0, 9);
+            Vehicle newVehicle = new Vehicle(newX, newY, sourceRoad, goalRoad, CarBrand.values()[indexCar]);
+
+            if (relationship == 1) {
+                sourceRoad.getRightMost().addVehicle(newVehicle);
+            } else {
+                sourceRoad.getRightMiddle().addVehicle(newVehicle);
+            }
+        }
+    }
+
+    private static boolean verifyAdd(Lane lane, int indexRoad, int newX, int newY) {
+        if (!lane.getLane().isEmpty()) {
+            Vehicle lastVehicle = lane.getLane().getLast();
             int lastX = lastVehicle.getX();
             int lastY = lastVehicle.getY();
-            int length = 80;
-            if (lastVehicle.getBrand() == CarBrand.FireTruck || lastVehicle.getBrand() == CarBrand.MiniVan || lastVehicle.getBrand() == CarBrand.Police) {
-                length = 100;
-            }
-            if (
-                    (indexRoad == 0 && lastY - newY < length) ||
-                            (indexRoad == 1 && newX - lastX < length) ||
-                            (indexRoad == 2 && newY - lastY < length) ||
-                            (indexRoad == 3 && lastX - newX < length)
-            ) {
-                return;
-            }
-
+            int length = 90;
+            return (indexRoad != 0 || lastY - newY >= length) &&
+                    (indexRoad != 1 || newX - lastX >= length) &&
+                    (indexRoad != 2 || newY - lastY >= length) &&
+                    (indexRoad != 3 || lastX - newX >= length);
         }
-
-        int indexCar = random.nextInt(0, 7);
-        Vehicle newVehicle = new Vehicle(newX, newY, sourceRoad, goalRoad, CarBrand.values()[indexCar]);
-
-        sourceRoad.addVehicle(newVehicle);
+        return true;
     }
 
 
@@ -127,10 +152,10 @@ public class RoadService {
 
     public Map<String, List<Vehicle>> getCar() {
         return Map.of(
-                "North", north.getRightLane(),
-                "East", east.getRightLane(),
-                "South", south.getRightLane(),
-                "West", west.getRightLane(),
+                "North", north.getCombinedLaneVehicles(),
+                "East", east.getCombinedLaneVehicles(),
+                "South", south.getCombinedLaneVehicles(),
+                "West", west.getCombinedLaneVehicles(),
                 "CenterArea", centerArea.getCenterArea()
         );
     }
@@ -143,29 +168,31 @@ public class RoadService {
         simulationLauncher.startCountdown(east.getLight());
         simulationLauncher.startCountdown(south.getLight());
         simulationLauncher.startCountdown(west.getLight());
-        simulationLauncher.startOperate(west);
-        simulationLauncher.startOperate(north);
-        simulationLauncher.startOperate(east);
-        simulationLauncher.startOperate(south);
         simulationLauncher.startCenter(centerArea);
+        // Start each lane of each road separately
+        simulationLauncher.startLane(north.getRightMost());
+        simulationLauncher.startLane(north.getRightMiddle());
 
-        executorService.scheduleAtFixedRate(() -> {
-            System.out.println("---- Vehicles on each road ----");
-            System.out.println("North: " + north.getRightLaneCoordinates());
-            System.out.println("East: " + east.getRightLaneCoordinates());
-            System.out.println("South: " + south.getRightLaneCoordinates());
-            System.out.println("West: " + west.getRightLaneCoordinates());
-            System.out.println("--------------------------------------");
-        }, 0, 1, TimeUnit.SECONDS);
+        simulationLauncher.startLane(east.getRightMost());
+        simulationLauncher.startLane(east.getRightMiddle());
 
-        // Optional: Block the main thread for non-web environments
-        try {
-            Thread.sleep(Long.MAX_VALUE); // Keeps the application alive
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            executorService.shutdownNow();
-            System.out.println("Simulation interrupted");
-        }
+        simulationLauncher.startLane(south.getRightMost());
+        simulationLauncher.startLane(south.getRightMiddle());
+
+        simulationLauncher.startLane(west.getRightMost());
+        simulationLauncher.startLane(west.getRightMiddle());
+
+
+//        executorService.scheduleAtFixedRate(() -> {
+//            System.out.println("---- Vehicles on each road ----");
+//            System.out.println("Center: " + centerArea.getCenterCoordinates());
+//            System.out.println("North: " + north.getRightLaneCoordinates());
+//            System.out.println("East: " + east.getRightLaneCoordinates());
+//            System.out.println("South: " + south.getRightLaneCoordinates());
+//            System.out.println("West: " + west.getRightLaneCoordinates());
+//            System.out.println("--------------------------------------");
+//        }, 0, 100, TimeUnit.MILLISECONDS);
+
     }
 
     @PreDestroy

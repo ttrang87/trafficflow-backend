@@ -1,4 +1,4 @@
-package com.julie.store;  // use your actual package
+package com.julie.store.config;  // use your actual package
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

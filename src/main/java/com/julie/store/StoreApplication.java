@@ -5,6 +5,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 @EnableAsync
+@EnableScheduling
 @RestController
 public class StoreApplication {
 	private final RoadService roadService;
@@ -29,10 +31,16 @@ public class StoreApplication {
 		return "index.html";
 	}
 
-	@GetMapping("/start-simulation")
-	public String startSimulation() {
+//	@GetMapping("/start-simulation")
+//	public String startSimulation() {
+//		roadService.startSimulation();
+//		return "Simulation started";
+//	}
+
+	@PostConstruct
+	public void initSimulationOnStartup() {
+		System.out.println("🚦 Auto-starting traffic simulation...");
 		roadService.startSimulation();
-		return "Simulation started";
 	}
 }
 

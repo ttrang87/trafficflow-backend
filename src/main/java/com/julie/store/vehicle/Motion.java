@@ -13,6 +13,7 @@ public abstract class Motion {
     private final String relationship;
     private int direction;
     private int turnDistance = 0;
+    private boolean isTurn = false;
     private boolean outPosition = false;
     private int speed;
     private int dangerousDistance;
@@ -25,7 +26,7 @@ public abstract class Motion {
         this.position = position;
         this.goal = goal;
         this.relationship = getRelationship();
-        this.direction = getDirection();
+        this.direction = (position.getRoadSize().ordinal()+2)%4;
         this.speed = initialSpeed;
     }
 
@@ -41,13 +42,9 @@ public abstract class Motion {
     }
 
     public int getDirection() {
-        RoadSize go = this.position.getRoadSize();
-        return (go.ordinal()+2)%4;
+        return direction;
     }
 
-    public void changeSpeed(int newSpeed) {
-        this.speed = newSpeed;
-    }
 
     public void changeDangerousDistance(int newDangerous) {
         this.dangerousDistance = newDangerous;
@@ -59,9 +56,13 @@ public abstract class Motion {
 
     public int getSpeed() { return this.speed; }
 
+    public int getInitialSpeed() { return this.initialSpeed; }
+
+    public int getDangerousDistance() { return this.dangerousDistance; }
+
 
     public void goStraight() {
-        System.out.println("Vehicle at [" + x + ", " + y + "] moving with direction " + direction + " and speed " + speed);
+//        System.out.println("Vehicle at [" + x + ", " + y + "] moving with direction " + direction + " and speed " + speed);
 
         if (outPosition) {
             turnDistance += speed;
@@ -77,30 +78,16 @@ public abstract class Motion {
         }
     }
 
-    public void run() {
-        speed = initialSpeed;
-        goStraight();
-    }
-
-    public void stop() {
-        speed = 0;
-        goStraight();
-    }
-
-    public void slow() {
-        speed /= 2;
-        goStraight();
-    }
-
     //for behind vehicles
-    public void moveSafe(int speed) {
-        if (dangerousDistance <= speed / 2) {
-            stop();
-        } else if (dangerousDistance < speed) {
-            slow();
+    public void moveSafe() {
+        if (dangerousDistance <= 2) {
+            this.speed = 0;
+        } else if (dangerousDistance <= this.speed) {
+            this.speed = dangerousDistance - 1;
         } else {
-            run();
+            this.speed = initialSpeed;
         }
+        goStraight();
     }
 
     public void turnRight() {
@@ -108,20 +95,26 @@ public abstract class Motion {
     }
 
     public void turnLeft() {
-        direction = (direction - 1) % 4;
+        direction = (direction + 3) % 4; // Equivalent to (direction - 1 + 4) % 4
     }
 
     public void changeOutPosition() {
-        outPosition = !outPosition;
+        outPosition = true;
+        speed = initialSpeed;
     }
 
-    //for the first vehicle only
+    public void changeSpeed(int speed) {
+        this.speed = speed;
+    }
+
     public void moveOut() {
-        if (relationship.equals("RIGHT") && turnDistance == 60) {
+        if (relationship.equals("RIGHT") && turnDistance >= 15 && !isTurn) {
+            isTurn = true;
             turnRight();
-        } else if (relationship.equals("LEFT") && turnDistance == 150){
+        } else if (relationship.equals("LEFT") && turnDistance >= 135 && !isTurn){
+            isTurn = true;
             turnLeft();
         }
-        run();
+        moveSafe();
     }
 }
