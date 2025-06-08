@@ -1,5 +1,6 @@
 package com.julie.store.vehicle;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.julie.store.road.Road;
 import com.julie.store.road.RoadSize;
 
@@ -7,16 +8,21 @@ public abstract class Motion {
     private int x;
     private int y;
     private final int initialSpeed;
+    @JsonIgnore
     private final Road position;
+    @JsonIgnore
     private final Road goal;
-    //check dangerous distance
     private final String relationship;
     private int direction;
     private int turnDistance = 0;
     private boolean isTurn = false;
-    private boolean outPosition = false;
+    private boolean outLane = false;
     private int speed;
     private int dangerousDistance;
+    private boolean switchingLane = false;
+    private int switchProgress = 0;
+    private String changeLane;
+
 
 
     public Motion(int x, int y, int initialSpeed, Road position, Road goal){
@@ -33,7 +39,7 @@ public abstract class Motion {
     public String getRelationship () {
         RoadSize go = this.position.getRoadSize();
         RoadSize to = this.goal.getRoadSize();
-        int angle = (go.ordinal() - to.ordinal()) % 4;
+        int angle = (go.ordinal() - to.ordinal() + 4) % 4;
         return switch(angle) {
             case 1 -> "RIGHT";
             case 2 -> "OPPOSITE";
@@ -45,7 +51,6 @@ public abstract class Motion {
         return direction;
     }
 
-
     public void changeDangerousDistance(int newDangerous) {
         this.dangerousDistance = newDangerous;
     }
@@ -54,27 +59,55 @@ public abstract class Motion {
 
     public int getY() { return this.y;}
 
+    public Road getGoal() { return this.goal; }
+
     public int getSpeed() { return this.speed; }
 
     public int getInitialSpeed() { return this.initialSpeed; }
 
     public int getDangerousDistance() { return this.dangerousDistance; }
 
+    public boolean getSwitch() {return this.switchingLane; };
+
 
     public void goStraight() {
-//        System.out.println("Vehicle at [" + x + ", " + y + "] moving with direction " + direction + " and speed " + speed);
+        if (switchingLane) {
+            switchProgress += speed;
 
-        if (outPosition) {
+            int shiftAmount = 25; // lane width
+            if (changeLane.equals("LEFT")) {
+                switch (direction) {
+                    case 0 -> x -= speed;
+                    case 1 -> y -= speed;
+                    case 2 -> x += speed;
+                    case 3 -> y += speed;
+                }
+            } else {
+                switch (direction) {
+                    case 0 -> x += speed;
+                    case 1 -> y += speed;
+                    case 2 -> x -= speed;
+                    case 3 -> y -= speed;
+                }
+            }
+
+            if (switchProgress >= shiftAmount) {
+                switchingLane = false;
+                switchProgress = 0;
+                goal.getLane1().changeIsSwitching(false);
+                goal.getLane2().changeIsSwitching(false);
+            }
+        }
+
+
+        if (outLane) {
             turnDistance += speed;
         }
-        if (direction == 1) {
-            x += speed;
-        } else if (direction == 3) {
-            x -= speed;
-        } else if (direction == 0) {
-            y -= speed;
-        } else {
-            y += speed;
+        switch (direction) {
+            case 0 -> y -= speed;
+            case 1 -> x += speed;
+            case 2 -> y += speed;
+            case 3 -> x -= speed;
         }
     }
 
@@ -98,8 +131,8 @@ public abstract class Motion {
         direction = (direction + 3) % 4; // Equivalent to (direction - 1 + 4) % 4
     }
 
-    public void changeOutPosition() {
-        outPosition = true;
+    public void changeOutLane() {
+        outLane = !outLane;
         speed = initialSpeed;
     }
 
@@ -116,5 +149,11 @@ public abstract class Motion {
             turnLeft();
         }
         moveSafe();
+    }
+
+    public void switchLane(String changeLane) {
+        switchingLane = true;
+        this.changeLane = changeLane;
+        switchProgress = 0;
     }
 }

@@ -1,94 +1,104 @@
 package com.julie.store.road;
-
-import com.julie.store.vehicle.CarBrand;
 import com.julie.store.vehicle.Vehicle;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue; // ADD THIS IMPORT
 
 @Service
 public class CenterArea {
-    private final List<Vehicle> centerArea = new ArrayList<>();
+    // CHANGE 1: Replace ArrayList with ConcurrentLinkedQueue
+    private final ConcurrentLinkedQueue<Vehicle> centerArea = new ConcurrentLinkedQueue<>();
 
     public void addVehicle(Vehicle vehicle) {
-        centerArea.add(vehicle);
+        centerArea.add(vehicle); // Same method name, works exactly the same
     }
 
     public List<Vehicle> getCenterArea() {
-        return centerArea;
+        return new ArrayList<>(centerArea); // Same - converts queue to list
     }
 
     public void updateAllDangerousDistances() {
-        int n = centerArea.size();
+        // CHANGE 2: Convert to array for safe indexing (since queue doesn't have get(i))
+        Vehicle[] vehicles = centerArea.toArray(new Vehicle[0]);
+        int n = vehicles.length;
 
         for (int i = 0; i < n; i++) {
-            Vehicle current = centerArea.get(i);
+            Vehicle current = vehicles[i]; // Use array instead of centerArea.get(i)
             int curDir = current.getDirection();
             int minDangerous = Integer.MAX_VALUE;
 
             for (int j = 0; j < i; j++) {
-                Vehicle front = centerArea.get(j);
+                Vehicle front = vehicles[j]; // Use array instead of centerArea.get(j)
                 int relationship = (curDir - front.getDirection() + 4) % 4;
                 int dx = Math.abs(current.getX() - front.getX());
                 int dy = Math.abs(current.getY() - front.getY());
                 int distance = (int) Math.sqrt(dx * dx + dy * dy);
-                int addition = distance - 100;
-                if (relationship != 2) {
-                    addition = front.getBrand().getLength() / 2 + current.getBrand().getLength() /2;
-                }
+                int addition = (relationship != 2)
+                        ? front.getBrand().getLength() / 2 + current.getBrand().getLength() / 2
+                        : distance - 100;
                 int gap = distance - addition - 2;
 
                 minDangerous = Math.min(minDangerous, gap);
             }
-            current.changeDangerousDistance(minDangerous); // free to move
 
+            current.changeDangerousDistance(minDangerous);
         }
     }
 
-
-    private static int getAddition(Vehicle check, Vehicle current, int relationship) {
-        CarBrand curBrand = current.getBrand();
-        CarBrand checkBrand = check.getBrand();
-
-        int addition = 0;
-
-        //parallel
-        if(relationship == 0) {
-            addition = curBrand.getLength() / 2 + checkBrand.getLength() /2;
-        } else if (relationship == 2) {
-            addition = Integer.MIN_VALUE;
-        }
-        else {
-            addition = curBrand.getLength() / 2 + checkBrand.getWidth() / 2;
-        }
-        return addition;
+    private boolean isOutOfBounds(Vehicle vehicle) {
+        int x = vehicle.getX();
+        int y = vehicle.getY();
+        return x < RoadSize.NorthSize.getXLeft()
+                || x > RoadSize.NorthSize.getXRight()
+                || y < RoadSize.NorthSize.getYDown()
+                || y > RoadSize.SouthSize.getYUp();
     }
 
-    public String getCenterCoordinates() {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < centerArea.size(); i++) {
-            Vehicle v = centerArea.get(i);
-            sb.append("[").append(v.getBrand()).append(", ").append(v.getX()).append(", ").append(v.getY()).append(", ").append(v.getDangerousDistance()).append(", ").append(v.getDirection()).append("]");
-            if (i < centerArea.size() - 1) sb.append(", ");
+    private void transferToTargetInboundLane(Vehicle vehicle) {
+        vehicle.changeOutLane();
+        Road goal = vehicle.getGoal();
+        String relationship = vehicle.getRelationship();
+        if ("RIGHT".equals(relationship)) {
+            goal.getLane1().addLane(vehicle);
+        } else {
+            goal.getLane2().addLane(vehicle);
         }
-        sb.append("]");
-        return sb.toString();
+    }
+
+    public void printAllVehiclesInfo() {
+        System.out.println("---- Vehicles in CenterArea ----");
+        for (Vehicle vehicle : centerArea) { // Same - enhanced for loop works the same
+            System.out.println("Brand: " + vehicle.getBrand() + " Speed: " + vehicle.getSpeed() + " Dangerous: " + vehicle.getDangerousDistance() + " x, y: " + vehicle.getX() + " " + vehicle.getY());
+        }
+        System.out.println("-------------------------------");
     }
 
     public void operate() {
-        while(true) {
+        while (true) {
             try {
                 updateAllDangerousDistances();
-                for (Vehicle vehicle: centerArea) {
+
+                // CHANGE 3: Iterator works the same, but now it's thread-safe!
+                Iterator<Vehicle> iter = centerArea.iterator();
+                while (iter.hasNext()) {
+                    Vehicle vehicle = iter.next();
                     vehicle.moveOut();
+                    if (isOutOfBounds(vehicle)) {
+                        // iter.remove() doesn't work well with ConcurrentLinkedQueue
+                        // Use direct removal instead:
+                        centerArea.remove(vehicle);
+                        transferToTargetInboundLane(vehicle);
+                    }
                 }
+
                 Thread.sleep(100);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
             }
-        };
+        }
     }
 }

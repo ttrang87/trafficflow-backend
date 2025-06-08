@@ -26,16 +26,6 @@ public class StoreApplication {
 		SpringApplication.run(StoreApplication.class, args);
 	}
 
-	@RequestMapping("/hi")
-	public String sayHello() {
-		return "index.html";
-	}
-
-//	@GetMapping("/start-simulation")
-//	public String startSimulation() {
-//		roadService.startSimulation();
-//		return "Simulation started";
-//	}
 
 	@PostConstruct
 	public void initSimulationOnStartup() {

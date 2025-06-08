@@ -169,6 +169,7 @@ public class RoadService {
         simulationLauncher.startCountdown(south.getLight());
         simulationLauncher.startCountdown(west.getLight());
         simulationLauncher.startCenter(centerArea);
+
         // Start each lane of each road separately
         simulationLauncher.startLane(north.getRightMost());
         simulationLauncher.startLane(north.getRightMiddle());
@@ -182,16 +183,31 @@ public class RoadService {
         simulationLauncher.startLane(west.getRightMost());
         simulationLauncher.startLane(west.getRightMiddle());
 
+        // Start each inbound lane of each road separately
+        simulationLauncher.startInboundLane(north.getLane1());
+        simulationLauncher.startInboundLane(north.getLane2());
 
-//        executorService.scheduleAtFixedRate(() -> {
-//            System.out.println("---- Vehicles on each road ----");
-//            System.out.println("Center: " + centerArea.getCenterCoordinates());
-//            System.out.println("North: " + north.getRightLaneCoordinates());
-//            System.out.println("East: " + east.getRightLaneCoordinates());
-//            System.out.println("South: " + south.getRightLaneCoordinates());
-//            System.out.println("West: " + west.getRightLaneCoordinates());
-//            System.out.println("--------------------------------------");
-//        }, 0, 100, TimeUnit.MILLISECONDS);
+        simulationLauncher.startInboundLane(east.getLane1());
+        simulationLauncher.startInboundLane(east.getLane2());
+
+        simulationLauncher.startInboundLane(south.getLane1());
+        simulationLauncher.startInboundLane(south.getLane2());
+
+        simulationLauncher.startInboundLane(west.getLane1());
+        simulationLauncher.startInboundLane(west.getLane2());
+
+        executorService.scheduleAtFixedRate(() -> {
+            centerArea.printAllVehiclesInfo();
+            north.getLane1().printAllVehiclesInfo();
+            north.getLane2().printAllVehiclesInfo();
+            east.getLane1().printAllVehiclesInfo();
+            east.getLane2().printAllVehiclesInfo();
+            south.getLane1().printAllVehiclesInfo();
+            south.getLane2().printAllVehiclesInfo();
+            west.getLane1().printAllVehiclesInfo();
+            west.getLane2().printAllVehiclesInfo();
+            System.out.println("--------------------------------------");
+        }, 0, 100, TimeUnit.MILLISECONDS);
 
     }
 

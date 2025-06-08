@@ -17,13 +17,11 @@ public class WebSocketService {
 
     @Scheduled(fixedRate = 100)
     public void sendCarUpdates() {
-        System.out.println("Sending vehicles update");
         messagingTemplate.convertAndSend("/topic/vehicles", roadService.getCar());
     }
 
     @Scheduled(fixedRate = 1000)
     public void sendTrafficLightUpdates() {
-
         messagingTemplate.convertAndSend("/topic/traffic-light", roadService.getTrafficLightColors());
     }
 }

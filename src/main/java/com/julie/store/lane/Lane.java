@@ -83,7 +83,7 @@ public class Lane {
                 || y > this.size.getYDown()) {
             this.lane.removeFirst();
             this.centerArea.addVehicle(vehicle);
-            vehicle.changeOutPosition();
+            vehicle.changeOutLane();
         }
     }
 
