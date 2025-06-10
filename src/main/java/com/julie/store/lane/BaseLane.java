@@ -1,5 +1,6 @@
 package com.julie.store.lane;
 
+import com.julie.store.road.CenterArea;
 import com.julie.store.road.RoadSize;
 import com.julie.store.vehicle.CarBrand;
 import com.julie.store.vehicle.Vehicle;
@@ -8,15 +9,18 @@ import java.util.List;
 
 public abstract class BaseLane {
     protected final RoadSize size;
+    protected final CenterArea centerArea;
 
-    public BaseLane(RoadSize size) {
+    public BaseLane(RoadSize size, CenterArea centerArea) {
         this.size = size;
+        this.centerArea = centerArea;
     }
 
     // Abstract methods that must be implemented
     public abstract List<Vehicle> getLane();
     public abstract void updateAllDangerousDistances();
     public abstract void operate();
+    public abstract Vehicle getLastVehicle();
 
     // Common method for calculating separation distance
     protected int calculateSeparationDistance(Vehicle current, Vehicle front) {
@@ -27,6 +31,29 @@ public abstract class BaseLane {
         CarBrand frontBrand = front.getBrand();
         int addition = curBrand.getLength() / 2 + frontBrand.getLength() / 2;
         return distance - addition;
+    }
+
+    public int calculateCenterDistance(Vehicle firstVehicle) {
+        int x = firstVehicle.getX();
+        int y = firstVehicle.getY();
+        int length = firstVehicle.getBrand().getLength();
+        String curRela = firstVehicle.getRelationship();
+
+        int minCenterDistance = Integer.MAX_VALUE;
+        for (Vehicle v : centerArea.getCenterArea()) {
+            int relation = (firstVehicle.getDirection() - v.getDirection() + 4) % 4;
+            String frontRela = v.getRelationship();
+            boolean isSameLane = curRela.equals("LEFT") && frontRela.equals("OPPOSITE") || curRela.equals(frontRela);
+            if ( isSameLane && relation == 0 ) {
+                int dx = Math.abs(v.getX() - x);
+                int dy = Math.abs(v.getY() - y);
+                int rawDistance = (int) Math.sqrt(dx * dx + dy * dy);
+                int  addition = length / 2 + v.getBrand().getLength() / 2;
+                minCenterDistance = Math.min(minCenterDistance, rawDistance - addition - 4);
+            }
+        }
+
+        return minCenterDistance;
     }
 
 

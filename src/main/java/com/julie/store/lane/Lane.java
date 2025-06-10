@@ -14,12 +14,10 @@ public class Lane extends BaseLane {
     // CHANGE 1: Replace ArrayList with ConcurrentLinkedDeque (get last)
     private final ConcurrentLinkedDeque<Vehicle> lane = new ConcurrentLinkedDeque<>();
     private final TrafficLight trafficLight;
-    private final CenterArea centerArea;
 
     public Lane(RoadSize size, TrafficLight trafficLight, CenterArea centerArea) {
-        super(size);
+        super(size, centerArea);
         this.trafficLight = trafficLight;
-        this.centerArea = centerArea;
     }
 
     public List<Vehicle> getLane() {
@@ -29,10 +27,6 @@ public class Lane extends BaseLane {
 
     public void addVehicle(Vehicle vehicle) {
         this.lane.offer(vehicle); // or lane.add(vehicle) - both work the same
-    }
-
-    private Vehicle getFirstVehicle() {
-        return lane.peekFirst(); // Returns first without removing, null if empty
     }
 
     public Vehicle getLastVehicle() {
@@ -52,29 +46,6 @@ public class Lane extends BaseLane {
             case 2 -> y - size.getYUp() - length / 2 - pedestrianLine;
             default -> size.getXRight() - x - length / 2 - pedestrianLine;
         };
-    }
-
-    public int calculateCenterDistance(Vehicle firstVehicle) {
-        int x = firstVehicle.getX();
-        int y = firstVehicle.getY();
-        int length = firstVehicle.getBrand().getLength();
-        String curRela = firstVehicle.getRelationship();
-
-        int minCenterDistance = Integer.MAX_VALUE;
-        for (Vehicle v : centerArea.getCenterArea()) {
-            int relation = (firstVehicle.getDirection() - v.getDirection() + 4) % 4;
-            String frontRela = v.getRelationship();
-            boolean isSameLane = curRela.equals("LEFT") && frontRela.equals("OPPOSITE") || curRela.equals(frontRela);
-            if ( isSameLane && relation == 0 ) {
-                int dx = Math.abs(v.getX() - x);
-                int dy = Math.abs(v.getY() - y);
-                int rawDistance = (int) Math.sqrt(dx * dx + dy * dy);
-                int  addition = length / 2 + v.getBrand().getLength() / 2;
-                minCenterDistance = Math.min(minCenterDistance, rawDistance - addition - 4);
-            }
-        }
-
-        return minCenterDistance;
     }
 
     public void removeVehicle(Vehicle vehicle) {
@@ -109,7 +80,7 @@ public class Lane extends BaseLane {
     public void greenFlow() {
         if (lane.isEmpty()) return;
 
-        Vehicle first = getFirstVehicle();
+        Vehicle first = lane.peekFirst();
         if (first == null) return; // Additional safety check
 
         first.changeDangerousDistance(calculateCenterDistance(first));
@@ -130,7 +101,7 @@ public class Lane extends BaseLane {
     public void yellowFlow() {
         if (lane.isEmpty()) return;
 
-        Vehicle first = getFirstVehicle();
+        Vehicle first = lane.peekFirst();
         if (first == null) return;
 
         first.changeDangerousDistance(calculateCenterDistance(first));
@@ -150,7 +121,7 @@ public class Lane extends BaseLane {
     public void redFlow() {
         if (lane.isEmpty()) return;
 
-        Vehicle first = getFirstVehicle();
+        Vehicle first = lane.peekFirst();
         if (first == null) return;
 
         first.changeDangerousDistance(Math.min(calculateBoundary(first), calculateCenterDistance(first)));

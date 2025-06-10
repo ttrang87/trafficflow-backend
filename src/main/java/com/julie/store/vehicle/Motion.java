@@ -169,6 +169,33 @@ public abstract class Motion {
         moveSafe();
     }
 
+    public void moveOutEmer() {
+        RoadSize roadSize = position.getRoadSize();
+        int turnLeftPoint = roadSize.getTurnLeftPointEmer();
+        int turnRightPoint = roadSize.getTurnRightPointEmer();
+
+        if (relationship.equals("RIGHT") && !isTurn) {
+            // Vertical direction (North or South): use y-coordinate
+            if ((direction == 0 && y <= turnRightPoint) ||
+                    (direction == 2 && y >= turnRightPoint) ||
+                    (direction == 1 && x >= turnRightPoint) ||
+                    (direction == 3 && x <= turnRightPoint)) {
+                isTurn = true;
+                turnRight();
+            }
+        }
+        else if (relationship.equals("LEFT") && !isTurn) {
+            if ((direction == 0 && y <= turnLeftPoint) ||
+                    (direction == 2 && y >= turnLeftPoint) ||
+                    (direction == 1 && x >= turnLeftPoint) ||
+                    (direction == 3 && x <= turnLeftPoint)) {
+                isTurn = true;
+                turnLeft();
+            }
+        }
+        moveSafe();
+    }
+
 
     public void switchLane(String changeLane, InboundLane currentLane, int insertIndex) {
         switchingLane = true;

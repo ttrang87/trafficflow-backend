@@ -45,4 +45,22 @@ public enum RoadSize {
         };
     }
 
+    public int getTurnLeftPointEmer() {
+        return switch (this) {
+            case NorthSize -> getYDown() + 105;
+            case EastSize -> getXLeft() - 105;
+            case SouthSize -> getYUp() - 105;
+            case WestSize -> getXRight() + 105;
+        };
+    }
+
+    public int getTurnRightPointEmer() {
+        return switch (this) {
+            case NorthSize -> getYDown() + 75;
+            case EastSize -> getXLeft() - 75;
+            case SouthSize -> getYUp() - 75;
+            case WestSize -> getXRight() + 75;
+        };
+    }
+
 }

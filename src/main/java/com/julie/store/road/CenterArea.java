@@ -64,10 +64,16 @@ public class CenterArea {
         vehicle.changeOutLane();
         Road goal = vehicle.getGoal();
         String relationship = vehicle.getRelationship();
-        if ("RIGHT".equals(relationship)) {
-            goal.getLane1().addLane(vehicle);
+        int indexCar = vehicle.getBrand().ordinal();
+        boolean isEmergency = indexCar == 6 || indexCar == 7 || indexCar == 8;
+        if (isEmergency) {
+            goal.getEmergencyLaneIn().addVehicle(vehicle);
         } else {
-            goal.getLane2().addLane(vehicle);
+            if ("RIGHT".equals(relationship)) {
+                goal.getLane1().addLane(vehicle);
+            } else {
+                goal.getLane2().addLane(vehicle);
+            }
         }
     }
 
@@ -94,7 +100,12 @@ public class CenterArea {
                     Iterator<Vehicle> iter = centerArea.iterator();
                     while (iter.hasNext()) {
                         Vehicle vehicle = iter.next();
-                        vehicle.moveOut();
+                        int carIndex = vehicle.getBrand().ordinal();
+                        if (carIndex == 6 || carIndex == 7 || carIndex == 8) {
+                            vehicle.moveOutEmer();
+                        } else {
+                            vehicle.moveOut();
+                        }
                         if (isOutOfBounds(vehicle)) {
                             iter.remove(); // Safe removal during iteration
                             transferToTargetInboundLane(vehicle);

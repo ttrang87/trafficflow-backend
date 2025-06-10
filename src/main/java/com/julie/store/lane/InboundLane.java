@@ -1,5 +1,6 @@
 package com.julie.store.lane;
 
+import com.julie.store.road.CenterArea;
 import com.julie.store.road.Road;
 import com.julie.store.road.RoadSize;
 import com.julie.store.vehicle.CarBrand;
@@ -17,8 +18,8 @@ public class InboundLane extends BaseLane{
     private volatile boolean isSwitchingNow = false;
     private Road road;
 
-    public InboundLane(RoadSize size) {
-        super(size);
+    public InboundLane(RoadSize size, CenterArea centerArea) {
+        super(size, centerArea);
     }
 
     public void setNeighbour(InboundLane lane, String changeLane) {
@@ -35,6 +36,14 @@ public class InboundLane extends BaseLane{
             return new ArrayList<>(this.lane);
         }
     }
+
+    public Vehicle getLastVehicle() {
+        synchronized (lane) {
+            if (lane.isEmpty()) return null;
+            return lane.getLast();
+        }
+    }
+
 
     public void addLane(Vehicle vehicle) {
         synchronized (lane) {

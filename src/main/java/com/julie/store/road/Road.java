@@ -1,6 +1,7 @@
 package com.julie.store.road;
 
 import com.julie.store.TrafficLight;
+import com.julie.store.lane.EmergencyLane;
 import com.julie.store.lane.InboundLane;
 import com.julie.store.lane.Lane;
 import com.julie.store.vehicle.Vehicle;
@@ -15,6 +16,8 @@ public class Road {
     private final Lane rightMiddle;
     private final InboundLane lane1;
     private final InboundLane lane2;
+    private final EmergencyLane emergencyLaneOut;
+    private final EmergencyLane emergencyLaneIn;
     public volatile boolean flag = false;
 
     public Road(RoadSize size, TrafficLight trafficLight, CenterArea centerArea) {
@@ -22,8 +25,10 @@ public class Road {
         this.trafficLight = trafficLight;
         this.rightMost = new Lane(size, trafficLight, centerArea);
         this.rightMiddle = new Lane(size, trafficLight, centerArea);
-        this.lane1 = new InboundLane(size);
-        this.lane2 = new InboundLane(size);
+        this.emergencyLaneOut = new EmergencyLane(size, centerArea);
+        this.emergencyLaneIn = new EmergencyLane(size, centerArea);
+        this.lane1 = new InboundLane(size, centerArea);
+        this.lane2 = new InboundLane(size, centerArea);
 
         lane1.setNeighbour(lane2, "LEFT");
         lane1.setRoad(this);
@@ -46,6 +51,10 @@ public class Road {
     public Lane getRightMiddle() {
         return this.rightMiddle;
     }
+
+    public EmergencyLane getEmergencyLaneOut() { return this.emergencyLaneOut; }
+
+    public EmergencyLane getEmergencyLaneIn() { return this.emergencyLaneIn; }
 
     public InboundLane getLane1() {
         return this.lane1;
@@ -71,6 +80,8 @@ public class Road {
         combined.addAll(rightMiddle.getLane());
         combined.addAll(lane1.getLane());
         combined.addAll(lane2.getLane());
+        combined.addAll(emergencyLaneOut.getLane());
+        combined.addAll(emergencyLaneIn.getLane());
         return combined;
     }
 
