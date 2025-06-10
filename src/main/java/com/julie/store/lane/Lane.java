@@ -58,20 +58,18 @@ public class Lane extends BaseLane {
         int x = firstVehicle.getX();
         int y = firstVehicle.getY();
         int length = firstVehicle.getBrand().getLength();
+        String curRela = firstVehicle.getRelationship();
 
         int minCenterDistance = Integer.MAX_VALUE;
         for (Vehicle v : centerArea.getCenterArea()) {
-            int relation = firstVehicle.getDirection() - v.getDirection();
-            if ((v.getRelationship().equals(firstVehicle.getRelationship()) && relation == 0) || relation == 1) {
+            int relation = (firstVehicle.getDirection() - v.getDirection() + 4) % 4;
+            String frontRela = v.getRelationship();
+            boolean isSameLane = curRela.equals("LEFT") && frontRela.equals("OPPOSITE") || curRela.equals(frontRela);
+            if ( isSameLane && relation == 0 ) {
                 int dx = Math.abs(v.getX() - x);
                 int dy = Math.abs(v.getY() - y);
                 int rawDistance = (int) Math.sqrt(dx * dx + dy * dy);
-                int addition;
-                if (relation == 1) {
-                    addition = length / 2 + v.getBrand().getWidth() / 2;
-                } else {
-                    addition = length / 2 + v.getBrand().getLength() / 2;
-                }
+                int  addition = length / 2 + v.getBrand().getLength() / 2;
                 minCenterDistance = Math.min(minCenterDistance, rawDistance - addition - 4);
             }
         }

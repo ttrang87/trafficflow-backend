@@ -7,7 +7,7 @@ public enum CarBrand {
     Audi(3,5, 46, 20),
     Honda(3,4, 40, 20),
     Toyota(3, 4, 40, 16),
-    Delivery(2,3, 86, 30),
+    Delivery(2,3, 58, 20),
     MiniVan(2,3, 40, 20),
     Ambulance(4, 6, 40, 16),
     FireTruck(4,6, 50, 20),

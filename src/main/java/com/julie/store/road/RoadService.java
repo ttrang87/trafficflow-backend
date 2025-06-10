@@ -65,43 +65,47 @@ public class RoadService {
                 3, 3, 3,
                 4, 4, 4,
                 5, 5, 5,
-                6,  // fewer times
-                7,
-                8
+//                6,  // fewer times
+//                7,
+//                8
         };
         int indexCar = weightedNumbers[random.nextInt(weightedNumbers.length)];
 
         if (indexRoad == 0) {
-            if (indexCar == 6 || indexCar == 7 || indexCar == 8) {
-                newX = size.getXLeft() + 75;
-            } else if (relationship == 1) {
+//            if (indexCar == 6 || indexCar == 7 || indexCar == 8) {
+//                newX = size.getXLeft() + 75;
+//            } else
+            if (relationship == 1) {
                 newX = size.getXLeft() + 15;
             } else {
                 newX = size.getXLeft() + 45;
             }
             newY = size.getYUp() + 35;
         } else if (indexRoad == 1) {
-            if (indexCar == 6 || indexCar == 7 || indexCar == 8) {
-                newY = size.getYUp() + 75;
-            } else if (relationship == 1) {
+//            if (indexCar == 6 || indexCar == 7 || indexCar == 8) {
+//                newY = size.getYUp() + 75;
+//            } else
+                if (relationship == 1) {
                 newY = size.getYUp() + 15;
             } else {
                 newY = size.getYUp() + 45;
             }
             newX = size.getXRight() - 35;
         } else if (indexRoad == 2) {
-            if (indexCar == 6 || indexCar == 7 || indexCar == 8) {
-                newX = size.getXRight() - 75;
-            } else if (relationship == 1) {
+//            if (indexCar == 6 || indexCar == 7 || indexCar == 8) {
+//                newX = size.getXRight() - 75;
+//            } else
+                if (relationship == 1) {
                 newX = size.getXRight() - 15;
             } else {
                 newX = size.getXRight() - 45;
             }
             newY = size.getYDown() - 35;
         } else {
-            if (indexCar == 6 || indexCar == 7 || indexCar == 8) {
-                newY = size.getYDown() - 75;
-            } else if (relationship == 1) {
+//            if (indexCar == 6 || indexCar == 7 || indexCar == 8) {
+//                newY = size.getYDown() - 75;
+//            } else
+                if (relationship == 1) {
                 newY = size.getYDown() - 15;
             } else {
                 newY = size.getYDown() - 45;
