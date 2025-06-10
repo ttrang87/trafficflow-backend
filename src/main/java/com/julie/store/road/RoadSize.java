@@ -26,4 +26,23 @@ public enum RoadSize {
     public int getXRight() { return xRight; }
     public int getYUp() { return yUp; }
     public int getYDown() { return yDown; }
+
+    public int getTurnLeftPoint() {
+        return switch (this) {
+            case NorthSize -> getYDown() + 135;
+            case EastSize -> getXLeft() - 135;
+            case SouthSize -> getYUp() - 135;
+            case WestSize -> getXRight() + 135;
+        };
+    }
+
+    public int getTurnRightPoint() {
+        return switch (this) {
+            case NorthSize -> getYDown() + 15;
+            case EastSize -> getXLeft() - 15;
+            case SouthSize -> getYUp() - 15;
+            case WestSize -> getXRight() + 15;
+        };
+    }
+
 }

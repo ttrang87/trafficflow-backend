@@ -1,6 +1,8 @@
 package com.julie.store.vehicle;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.julie.store.lane.InboundLane;
+import com.julie.store.lane.Lane;
 import com.julie.store.road.Road;
 import com.julie.store.road.RoadSize;
 
@@ -14,15 +16,15 @@ public abstract class Motion {
     private final Road goal;
     private final String relationship;
     private int direction;
-    private int turnDistance = 0;
     private boolean isTurn = false;
-    private boolean outLane = false;
     private int speed;
     private int dangerousDistance;
     private boolean switchingLane = false;
     private int switchProgress = 0;
     private String changeLane;
-
+    @JsonIgnore
+    private InboundLane currentLane;
+    private int insertIndex;
 
 
     public Motion(int x, int y, int initialSpeed, Road position, Road goal){
@@ -69,12 +71,15 @@ public abstract class Motion {
 
     public boolean getSwitch() {return this.switchingLane; };
 
+    public void setSwitch(boolean switching) {
+        this.switchingLane = switching;
+    }
 
     public void goStraight() {
         if (switchingLane) {
             switchProgress += speed;
 
-            int shiftAmount = 25; // lane width
+            int shiftAmount = 28; // lane width
             if (changeLane.equals("LEFT")) {
                 switch (direction) {
                     case 0 -> x -= speed;
@@ -94,15 +99,13 @@ public abstract class Motion {
             if (switchProgress >= shiftAmount) {
                 switchingLane = false;
                 switchProgress = 0;
-                goal.getLane1().changeIsSwitching(false);
-                goal.getLane2().changeIsSwitching(false);
+
+                // Complete the lane switch through the current lane
+                this.currentLane.completeLaneSwitch((Vehicle) this, insertIndex);
+
             }
         }
 
-
-        if (outLane) {
-            turnDistance += speed;
-        }
         switch (direction) {
             case 0 -> y -= speed;
             case 1 -> x += speed;
@@ -132,7 +135,6 @@ public abstract class Motion {
     }
 
     public void changeOutLane() {
-        outLane = !outLane;
         speed = initialSpeed;
     }
 
@@ -141,19 +143,38 @@ public abstract class Motion {
     }
 
     public void moveOut() {
-        if (relationship.equals("RIGHT") && turnDistance >= 15 && !isTurn) {
-            isTurn = true;
-            turnRight();
-        } else if (relationship.equals("LEFT") && turnDistance >= 135 && !isTurn){
-            isTurn = true;
-            turnLeft();
+        RoadSize roadSize = position.getRoadSize();
+        int turnLeftPoint = roadSize.getTurnLeftPoint();
+        int turnRightPoint = roadSize.getTurnRightPoint();
+
+        if (relationship.equals("RIGHT") && !isTurn) {
+            // Vertical direction (North or South): use y-coordinate
+            if ((direction == 0 && y <= turnRightPoint) ||
+                    (direction == 2 && y >= turnRightPoint) ||
+                    (direction == 1 && x >= turnRightPoint) ||
+                    (direction == 3 && x <= turnRightPoint)) {
+                isTurn = true;
+                turnRight();
+            }
+        }
+        else if (relationship.equals("LEFT") && !isTurn) {
+            if ((direction == 0 && y <= turnLeftPoint) ||
+                    (direction == 2 && y >= turnLeftPoint) ||
+                    (direction == 1 && x >= turnLeftPoint) ||
+                    (direction == 3 && x <= turnLeftPoint)) {
+                isTurn = true;
+                turnLeft();
+            }
         }
         moveSafe();
     }
 
-    public void switchLane(String changeLane) {
+
+    public void switchLane(String changeLane, InboundLane currentLane, int insertIndex) {
         switchingLane = true;
-        this.changeLane = changeLane;
         switchProgress = 0;
+        this.changeLane = changeLane;
+        this.currentLane = currentLane;
+        this.insertIndex = insertIndex;
     }
 }

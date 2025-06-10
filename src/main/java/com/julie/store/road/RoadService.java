@@ -58,30 +58,50 @@ public class RoadService {
         int newX, newY;
         int indexRoad = size.ordinal();
         int relationship = (indexRoad - goalRoad.getRoadSize().ordinal() + 4) % 4;
+        int[] weightedNumbers = {
+                0, 0, 0,
+                1, 1, 1,
+                2, 2, 2,
+                3, 3, 3,
+                4, 4, 4,
+                5, 5, 5,
+                6,  // fewer times
+                7,
+                8
+        };
+        int indexCar = weightedNumbers[random.nextInt(weightedNumbers.length)];
 
         if (indexRoad == 0) {
-            if (relationship == 1) {
+            if (indexCar == 6 || indexCar == 7 || indexCar == 8) {
+                newX = size.getXLeft() + 75;
+            } else if (relationship == 1) {
                 newX = size.getXLeft() + 15;
             } else {
                 newX = size.getXLeft() + 45;
             }
             newY = size.getYUp() + 35;
         } else if (indexRoad == 1) {
-            if (relationship == 1) {
+            if (indexCar == 6 || indexCar == 7 || indexCar == 8) {
+                newY = size.getYUp() + 75;
+            } else if (relationship == 1) {
                 newY = size.getYUp() + 15;
             } else {
                 newY = size.getYUp() + 45;
             }
             newX = size.getXRight() - 35;
         } else if (indexRoad == 2) {
-            if (relationship == 1) {
+            if (indexCar == 6 || indexCar == 7 || indexCar == 8) {
+                newX = size.getXRight() - 75;
+            } else if (relationship == 1) {
                 newX = size.getXRight() - 15;
             } else {
                 newX = size.getXRight() - 45;
             }
             newY = size.getYDown() - 35;
         } else {
-            if (relationship == 1) {
+            if (indexCar == 6 || indexCar == 7 || indexCar == 8) {
+                newY = size.getYDown() - 75;
+            } else if (relationship == 1) {
                 newY = size.getYDown() - 15;
             } else {
                 newY = size.getYDown() - 45;
@@ -97,7 +117,6 @@ public class RoadService {
         }
 
         if (check) {
-            int indexCar = random.nextInt(0, 9);
             Vehicle newVehicle = new Vehicle(newX, newY, sourceRoad, goalRoad, CarBrand.values()[indexCar]);
 
             if (relationship == 1) {
@@ -109,8 +128,8 @@ public class RoadService {
     }
 
     private static boolean verifyAdd(Lane lane, int indexRoad, int newX, int newY) {
-        if (!lane.getLane().isEmpty()) {
-            Vehicle lastVehicle = lane.getLane().getLast();
+        Vehicle lastVehicle = lane.getLastVehicle();
+        if (lastVehicle != null) {
             int lastX = lastVehicle.getX();
             int lastY = lastVehicle.getY();
             int length = 90;

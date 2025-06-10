@@ -8,26 +8,35 @@ import com.julie.store.vehicle.Vehicle;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
-public class Lane {
-    private final RoadSize size;
-    private final List<Vehicle> lane = new ArrayList<>();
+public class Lane extends BaseLane {
+    // CHANGE 1: Replace ArrayList with ConcurrentLinkedDeque (get last)
+    private final ConcurrentLinkedDeque<Vehicle> lane = new ConcurrentLinkedDeque<>();
     private final TrafficLight trafficLight;
     private final CenterArea centerArea;
 
     public Lane(RoadSize size, TrafficLight trafficLight, CenterArea centerArea) {
-        this.size = size;
+        super(size);
         this.trafficLight = trafficLight;
         this.centerArea = centerArea;
     }
 
     public List<Vehicle> getLane() {
-        return this.lane;  // returns empty list if no vehicles
+        // CHANGE 2: Convert queue to list for compatibility
+        return new ArrayList<>(this.lane);
     }
 
-
     public void addVehicle(Vehicle vehicle) {
-        this.lane.add(vehicle);
+        this.lane.offer(vehicle); // or lane.add(vehicle) - both work the same
+    }
+
+    private Vehicle getFirstVehicle() {
+        return lane.peekFirst(); // Returns first without removing, null if empty
+    }
+
+    public Vehicle getLastVehicle() {
+        return lane.peekLast();
     }
 
     public int calculateBoundary(Vehicle firstVehicle) {
@@ -35,15 +44,13 @@ public class Lane {
         int y = firstVehicle.getY();
         int length = firstVehicle.getBrand().getLength();
         int ind = size.ordinal();
+        int pedestrianLine = 25;
 
-        // 1. Distance to road boundary
-
-        // Return the more urgent one (smallest distance)
         return switch (ind) {
-            case 0 -> size.getYDown() - y - length / 2;
-            case 1 -> x - size.getXLeft() - length / 2;
-            case 2 -> y - size.getYUp() - length / 2;
-            default -> size.getXRight() - x - length / 2;
+            case 0 -> size.getYDown() - y - length / 2 - pedestrianLine;
+            case 1 -> x - size.getXLeft() - length / 2 - pedestrianLine;
+            case 2 -> y - size.getYUp() - length / 2 - pedestrianLine;
+            default -> size.getXRight() - x - length / 2 - pedestrianLine;
         };
     }
 
@@ -52,11 +59,10 @@ public class Lane {
         int y = firstVehicle.getY();
         int length = firstVehicle.getBrand().getLength();
 
-        // 2. Distance to vehicles in center area
         int minCenterDistance = Integer.MAX_VALUE;
         for (Vehicle v : centerArea.getCenterArea()) {
             int relation = firstVehicle.getDirection() - v.getDirection();
-            if ((v.getRelationship().equals(firstVehicle.getRelationship()) && relation == 0)  || relation == 1) {
+            if ((v.getRelationship().equals(firstVehicle.getRelationship()) && relation == 0) || relation == 1) {
                 int dx = Math.abs(v.getX() - x);
                 int dy = Math.abs(v.getY() - y);
                 int rawDistance = (int) Math.sqrt(dx * dx + dy * dy);
@@ -70,7 +76,6 @@ public class Lane {
             }
         }
 
-        // Return the more urgent one (smallest distance)
         return minCenterDistance;
     }
 
@@ -81,75 +86,84 @@ public class Lane {
                 || x < this.size.getXLeft()
                 || y < this.size.getYUp()
                 || y > this.size.getYDown()) {
-            this.lane.removeFirst();
-            this.centerArea.addVehicle(vehicle);
-            vehicle.changeOutLane();
+            // CHANGE 3: Use poll() instead of removeFirst()
+            Vehicle removed = this.lane.pollFirst(); // Removes and returns first element
+            if (removed != null) { // Safety check
+                this.centerArea.addVehicle(removed);
+                removed.changeOutLane();
+            }
         }
     }
 
+    // CHANGE 4: New method to update dangerous distances for queue
     public void updateAllDangerousDistances() {
-        for (int i = 1; i < lane.size(); i++) {
-            Vehicle current = lane.get(i);
-            Vehicle front = lane.get(i - 1);
+        // Convert to array for indexed access
+        Vehicle[] vehicles = lane.toArray(new Vehicle[0]);
 
-            int dx = Math.abs(current.getX() - front.getX());
-            int dy = Math.abs(current.getY() - front.getY());
-            int distance = (size.ordinal() == 0 || size.ordinal() == 2) ? dy : dx;
-            CarBrand curBrand = current.getBrand();
-            CarBrand frontBrand = front.getBrand();
-
-            int addition = curBrand.getLength() / 2 + frontBrand.getLength() / 2;
-            current.changeDangerousDistance(distance - addition);
+        for (int i = 1; i < vehicles.length; i++) {
+            Vehicle current = vehicles[i];
+            Vehicle front = vehicles[i - 1];
+            current.changeDangerousDistance(calculateSeparationDistance(current, front));
         }
-
     }
+
 
     public void greenFlow() {
         if (lane.isEmpty()) return;
 
-        Vehicle first = lane.getFirst();
+        Vehicle first = getFirstVehicle();
+        if (first == null) return; // Additional safety check
+
         first.changeDangerousDistance(calculateCenterDistance(first));
         first.changeSpeed(first.getInitialSpeed());
-        first.moveSafe();  // obey traffic light
+        first.moveSafe();
         removeVehicle(first);
 
         updateAllDangerousDistances();
 
-        for (int i = 1; i < lane.size(); i++) {
-            lane.get(i).moveSafe();  // follow behavior only
-            removeVehicle(lane.get(i));
+        // CHANGE 6: Iterate safely over remaining vehicles
+        Vehicle[] vehicles = lane.toArray(new Vehicle[0]);
+        for (int i = 1; i < vehicles.length; i++) {
+            vehicles[i].moveSafe();
+            removeVehicle(vehicles[i]);
         }
     }
 
     public void yellowFlow() {
         if (lane.isEmpty()) return;
 
-        Vehicle first = lane.getFirst();
+        Vehicle first = getFirstVehicle();
+        if (first == null) return;
+
         first.changeDangerousDistance(calculateCenterDistance(first));
         first.changeSpeed(first.getInitialSpeed() - 1);
-        first.moveSafe();  // obey traffic light
+        first.moveSafe();
         removeVehicle(first);
 
         updateAllDangerousDistances();
 
-        for (int i = 1; i < lane.size(); i++) {
-            lane.get(i).moveSafe();  // follow behavior only
-            removeVehicle(lane.get(i));
+        Vehicle[] vehicles = lane.toArray(new Vehicle[0]);
+        for (int i = 1; i < vehicles.length; i++) {
+            vehicles[i].moveSafe();
+            removeVehicle(vehicles[i]);
         }
     }
 
     public void redFlow() {
         if (lane.isEmpty()) return;
 
-        Vehicle first = lane.getFirst();
+        Vehicle first = getFirstVehicle();
+        if (first == null) return;
+
         first.changeDangerousDistance(Math.min(calculateBoundary(first), calculateCenterDistance(first)));
-        first.moveSafe();  // obey traffic light
+        first.moveSafe();
 
         updateAllDangerousDistances();
 
-        for (int i = 1; i < lane.size(); i++) {
-            lane.get(i).moveSafe();  // follow behavior only
-            removeVehicle(lane.get(i));
+        Vehicle[] vehicles = lane.toArray(new Vehicle[0]);
+        for (int i = 1; i < vehicles.length; i++) {
+            vehicles[i].moveSafe();
+            removeVehicle(vehicles[i]);
         }
     }
 
@@ -165,7 +179,13 @@ public class Lane {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
+            } catch (Exception e) {
+                // Add general exception handling to prevent thread death
+                System.err.println("Error in Lane.operate(): " + e.getMessage());
+                e.printStackTrace();
+                // Continue running instead of crashing
             }
         }
     }
+
 }

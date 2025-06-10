@@ -15,6 +15,7 @@ public class Road {
     private final Lane rightMiddle;
     private final InboundLane lane1;
     private final InboundLane lane2;
+    public volatile boolean flag = false;
 
     public Road(RoadSize size, TrafficLight trafficLight, CenterArea centerArea) {
         this.size = size;
@@ -25,7 +26,9 @@ public class Road {
         this.lane2 = new InboundLane(size);
 
         lane1.setNeighbour(lane2, "LEFT");
+        lane1.setRoad(this);
         lane2.setNeighbour(lane1, "RIGHT");
+        lane2.setRoad(this);
     }
 
     public RoadSize getRoadSize() {
@@ -51,6 +54,15 @@ public class Road {
     public InboundLane getLane2() {
         return this.lane2;
     }
+
+    public boolean isSwitching() {
+        return flag;
+    }
+
+    public void setSwitching(boolean value) {
+        this.flag = value;
+    }
+
 
 
     public List<Vehicle> getCombinedLaneVehicles() {
