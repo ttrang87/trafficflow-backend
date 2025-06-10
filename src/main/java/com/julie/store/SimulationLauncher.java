@@ -4,7 +4,6 @@ import com.julie.store.lane.EmergencyLane;
 import com.julie.store.lane.InboundLane;
 import com.julie.store.lane.Lane;
 import com.julie.store.road.CenterArea;
-import com.julie.store.road.RoadService;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -36,19 +35,5 @@ public class SimulationLauncher {
         centerArea.operate();
     }
 
-    @Async("taskExecutor")
-    public void startAddingVehicles(RoadService roadService) {
-        while (true) {
-            try {
-                roadService.randomAddVehicle();
-                Thread.sleep(100); // every 100ms
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            } catch (Exception ex) {
-                System.err.println("Error in adding vehicles: " + ex.getMessage());
-                ex.printStackTrace();
-            }
-        }
-    }
+
 }

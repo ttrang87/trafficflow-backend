@@ -3,14 +3,12 @@ package com.julie.store.road;
 import com.julie.store.SimulationLauncher;
 import com.julie.store.TrafficLight;
 import com.julie.store.lane.BaseLane;
-import com.julie.store.lane.Lane;
 import com.julie.store.vehicle.CarBrand;
 import com.julie.store.vehicle.Vehicle;
 import jakarta.annotation.PreDestroy;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -42,7 +40,8 @@ public class RoadService {
     }
 
     public void randomAddVehicle() {
-        boolean add = random.nextBoolean();
+        boolean[] weightedProb = { true, false, false};
+        boolean add = weightedProb[random.nextInt(weightedProb.length)];
         if (!add) {
             return;
         }
@@ -59,18 +58,19 @@ public class RoadService {
         int newX, newY;
         int indexRoad = size.ordinal();
         int relationship = (indexRoad - goalRoad.getRoadSize().ordinal() + 4) % 4;
-        int[] weightedNumbers = {
-                0, 0, 0, 0,
-                1, 1, 1, 1,
-                2, 2, 2, 2,
-                3, 3, 3, 3,
-                4, 4, 4, 4,
-                5, 5, 5, 4,
-                6,  // fewer times
-                7,
-                8
-        };
-        int indexCar = weightedNumbers[random.nextInt(weightedNumbers.length)];
+        ArrayList<Integer> weightedNumbers = new ArrayList<Integer>();
+
+        for (int value = 0; value < 6; value++) {
+            for (int i = 0; i < 60; i++) {
+                weightedNumbers.add(value);
+            }
+        }
+
+        weightedNumbers.add(6);
+        weightedNumbers.add(7);
+        weightedNumbers.add(8);
+
+        int indexCar = weightedNumbers.get(random.nextInt(weightedNumbers.size()));
         boolean isEmergency = indexCar == 6 || indexCar == 7 || indexCar == 8;
 
         if (indexRoad == 0) {
@@ -81,7 +81,7 @@ public class RoadService {
             } else {
                 newX = size.getXLeft() + 45;
             }
-            newY = size.getYUp() + 35;
+            newY = size.getYUp() + 10;
         } else if (indexRoad == 1) {
             if (isEmergency) {
                 newY = size.getYUp() + 75;
@@ -90,7 +90,7 @@ public class RoadService {
             } else {
                 newY = size.getYUp() + 45;
             }
-            newX = size.getXRight() - 35;
+            newX = size.getXRight() - 10;
         } else if (indexRoad == 2) {
             if (isEmergency) {
                 newX = size.getXRight() - 75;
@@ -99,7 +99,7 @@ public class RoadService {
             } else {
                 newX = size.getXRight() - 45;
             }
-            newY = size.getYDown() - 35;
+            newY = size.getYDown() - 10;
         } else {
             if (isEmergency) {
                 newY = size.getYDown() - 75;
@@ -108,7 +108,7 @@ public class RoadService {
             } else {
                 newY = size.getYDown() - 45;
             }
-            newX = size.getXLeft() + 35;
+            newX = size.getXLeft() + 10;
         }
 
         boolean check;
@@ -127,6 +127,8 @@ public class RoadService {
             Vehicle newVehicle = new Vehicle(newX, newY, sourceRoad, goalRoad, CarBrand.values()[indexCar]);
             if (isEmergency) {
                 sourceRoad.getEmergencyLaneOut().addVehicle(newVehicle);
+                System.out.println("EMERGENCY VEHICLE DETECTED - CHANGING ALL LIGHTS TO RED");
+                changeLightEmergency();
             } else {
                 if (relationship == 1) {
                     sourceRoad.getRightMost().addVehicle(newVehicle);
@@ -136,6 +138,59 @@ public class RoadService {
             }
         }
     }
+
+    public void changeLightEmergency() {
+        north.getLight().emergency();
+        east.getLight().emergency();
+        south.getLight().emergency();
+        west.getLight().emergency();
+    }
+
+    public void resumeLight() {
+        if (north.getLight().getEmergency()) {
+            north.getLight().resume();
+        }
+        if (east.getLight().getEmergency()) {
+            east.getLight().resume();
+        }
+        if (south.getLight().getEmergency()) {
+            south.getLight().resume();
+        }
+        if (west.getLight().getEmergency()) {
+            west.getLight().resume();
+        }
+    }
+    public boolean checkEmergency (Road road) {
+        return road.getEmergencyLaneOut().getLane().isEmpty();
+    }
+
+    public boolean checkCenterArea (CenterArea centerArea) {
+        if (centerArea.getCenterArea().isEmpty()) { return true; }
+        for (Vehicle vehicle : centerArea.getCenterArea()) {
+            int indexCar = vehicle.getBrand().ordinal();
+            if (indexCar == 6 || indexCar == 7 || indexCar == 8 ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+
+    public void resumeAfterEmergency() {
+        boolean northEmpty = checkEmergency(north);
+        boolean eastEmpty = checkEmergency(east);
+        boolean southEmpty = checkEmergency(south);
+        boolean westEmpty = checkEmergency(west);
+        boolean centerEmpty = checkCenterArea(centerArea);
+
+        if (northEmpty && eastEmpty && southEmpty && westEmpty && centerEmpty ) {
+            System.out.println("LIGHT RESUME");
+            resumeLight();
+        }
+    }
+
 
     private static boolean verifyAdd(BaseLane lane, int indexRoad, int newX, int newY) {
         Vehicle lastVehicle = lane.getLastVehicle();
@@ -192,7 +247,8 @@ public class RoadService {
     public void startSimulation() {
         System.out.println("Starting simulation");
 
-        simulationLauncher.startAddingVehicles(this);
+        executorService.scheduleAtFixedRate(this::randomAddVehicle, 0, 100, TimeUnit.MILLISECONDS);
+        executorService.scheduleAtFixedRate(this::resumeAfterEmergency, 0, 300, TimeUnit.MILLISECONDS);
         simulationLauncher.startCountdown(north.getLight());
         simulationLauncher.startCountdown(east.getLight());
         simulationLauncher.startCountdown(south.getLight());
@@ -235,18 +291,18 @@ public class RoadService {
         simulationLauncher.startInboundLane(west.getLane1());
         simulationLauncher.startInboundLane(west.getLane2());
 
-        executorService.scheduleAtFixedRate(() -> {
-            centerArea.printAllVehiclesInfo();
-            north.getLane1().printAllVehiclesInfo();
-            north.getLane2().printAllVehiclesInfo();
-            east.getLane1().printAllVehiclesInfo();
-            east.getLane2().printAllVehiclesInfo();
-            south.getLane1().printAllVehiclesInfo();
-            south.getLane2().printAllVehiclesInfo();
-            west.getLane1().printAllVehiclesInfo();
-            west.getLane2().printAllVehiclesInfo();
-            System.out.println("--------------------------------------");
-        }, 0, 100, TimeUnit.MILLISECONDS);
+//        executorService.scheduleAtFixedRate(() -> {
+//            centerArea.printAllVehiclesInfo();
+//            north.getLane1().printAllVehiclesInfo();
+//            north.getLane2().printAllVehiclesInfo();
+//            east.getLane1().printAllVehiclesInfo();
+//            east.getLane2().printAllVehiclesInfo();
+//            south.getLane1().printAllVehiclesInfo();
+//            south.getLane2().printAllVehiclesInfo();
+//            west.getLane1().printAllVehiclesInfo();
+//            west.getLane2().printAllVehiclesInfo();
+//            System.out.println("--------------------------------------");
+//        }, 0, 100, TimeUnit.MILLISECONDS);
 
     }
 

@@ -8,25 +8,44 @@ public class TrafficLight {
     private int second;
     private String color;
     private int count;
+    private String keepColor;
+    private int keepCount;
+    private volatile boolean isEmergency = false;
 
     public TrafficLight(String color, int second, int count) {
         this.color = color;
         this.second = second;
         this.count = count;
+        this.keepColor = color;
     }
 
-    public int getCount() {
-        return this.count;
+    public void emergency() {
+        if (!isEmergency) {
+            this.isEmergency = true;
+            this.keepColor = this.color;
+            this.keepCount = this.count;
+            this.color = "RED";
+        }
+    }
+
+    public void resume() {
+        System.out.println("LIGHT RESUME TO " + this.keepColor + " (Count: " + this.count + "/" + this.second + ")");
+        this.isEmergency = false;
+        this.color = this.keepColor;
+        System.out.println("COLOR UPDATED: " + this.color);
+        this.count = keepCount;
     }
 
     public void countDown() {
         while (true) {
-            this.count += 1;
-            if (count == this.second) {
-                switch (this.color) {
-                    case "GREEN" -> this.changeGreen();
-                    case "YELLOW" -> this.changeYellow();
-                    default -> this.changeRed();
+            if (!isEmergency) {
+                this.count += 1;
+                if (count == this.second) {
+                    switch (this.color) {
+                        case "GREEN" -> this.changeGreen();
+                        case "YELLOW" -> this.changeYellow();
+                        default -> this.changeRed();
+                    }
                 }
             }
             try {
@@ -41,6 +60,10 @@ public class TrafficLight {
 
     public String getColor(){
         return this.color;
+    }
+
+    public boolean getEmergency(){
+        return this.isEmergency;
     }
 
     public void changeGreen() {
