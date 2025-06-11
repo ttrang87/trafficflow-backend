@@ -132,7 +132,7 @@ public class Lane extends BaseLane {
         Vehicle first = lane.peekFirst();
         if (first == null) return;
 
-        first.changeDangerousDistance(calculateBoundary(first));
+        first.changeDangerousDistance(Math.min(calculateBoundary(first), calculateCenterDistance(first)));
         first.moveSafe();
 
         updateAllDangerousDistances();

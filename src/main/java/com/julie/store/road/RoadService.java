@@ -66,9 +66,9 @@ public class RoadService {
             }
         }
 
-//        weightedNumbers.add(6);
-//        weightedNumbers.add(7);
-//        weightedNumbers.add(8);
+        weightedNumbers.add(6);
+        weightedNumbers.add(7);
+        weightedNumbers.add(8);
 
         int indexCar = weightedNumbers.get(random.nextInt(weightedNumbers.size()));
         boolean isEmergency = indexCar == 6 || indexCar == 7 || indexCar == 8;
