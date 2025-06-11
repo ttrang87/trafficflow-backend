@@ -75,38 +75,38 @@ public class RoadService {
 
         if (indexRoad == 0) {
             if (isEmergency) {
-                newX = size.getXLeft() + 75;
+                newX = size.getXLeft() + 50;
             } else if (relationship == 1) {
-                newX = size.getXLeft() + 15;
+                newX = size.getXLeft() + 10;
             } else {
-                newX = size.getXLeft() + 45;
+                newX = size.getXLeft() + 30;
             }
             newY = size.getYUp() + 10;
         } else if (indexRoad == 1) {
             if (isEmergency) {
-                newY = size.getYUp() + 75;
+                newY = size.getYUp() + 50;
             } else if (relationship == 1) {
-                newY = size.getYUp() + 15;
+                newY = size.getYUp() + 10;
             } else {
-                newY = size.getYUp() + 45;
+                newY = size.getYUp() + 30;
             }
             newX = size.getXRight() - 10;
         } else if (indexRoad == 2) {
             if (isEmergency) {
-                newX = size.getXRight() - 75;
+                newX = size.getXRight() - 50;
             } else if (relationship == 1) {
-                newX = size.getXRight() - 15;
+                newX = size.getXRight() - 10;
             } else {
-                newX = size.getXRight() - 45;
+                newX = size.getXRight() - 30;
             }
             newY = size.getYDown() - 10;
         } else {
             if (isEmergency) {
-                newY = size.getYDown() - 75;
+                newY = size.getYDown() - 50;
             } else if (relationship == 1) {
-                newY = size.getYDown() - 15;
+                newY = size.getYDown() - 10;
             } else {
-                newY = size.getYDown() - 45;
+                newY = size.getYDown() - 30;
             }
             newX = size.getXLeft() + 10;
         }

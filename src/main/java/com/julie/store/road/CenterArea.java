@@ -67,7 +67,7 @@ public class CenterArea {
         int dy = Math.abs(vehicle.getY() - lastVehicle.getY());
         int distance = (int) Math.sqrt(dx * dx + dy * dy);
         int addition = vehicle.getBrand().getLength() / 2 +
-                lastVehicle.getBrand().getLength() / 2 - 10;
+                lastVehicle.getBrand().getLength() / 2 - 5;
 
         return distance - addition;
 

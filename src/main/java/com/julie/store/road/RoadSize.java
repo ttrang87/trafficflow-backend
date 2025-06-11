@@ -4,10 +4,10 @@ import org.springframework.stereotype.Component;
 
 public enum RoadSize {
 
-    NorthSize(420, 600, 20, 400),
-    EastSize(600, 980, 400, 580),
-    SouthSize(420, 600, 580, 960),
-    WestSize(40, 420, 400, 580);
+    NorthSize(340, 460, 20, 340),
+    EastSize(460, 780, 340, 460),
+    SouthSize(340, 460, 460, 780),
+    WestSize(20, 340, 340, 460);
 
 
     private final int xLeft;
@@ -29,37 +29,37 @@ public enum RoadSize {
 
     public int getTurnLeftPoint() {
         return switch (this) {
-            case NorthSize -> getYDown() + 135;
-            case EastSize -> getXLeft() - 135;
-            case SouthSize -> getYUp() - 135;
-            case WestSize -> getXRight() + 135;
+            case NorthSize -> getYDown() + 90;
+            case EastSize -> getXLeft() - 90;
+            case SouthSize -> getYUp() - 90;
+            case WestSize -> getXRight() + 90;
         };
     }
 
     public int getTurnRightPoint() {
         return switch (this) {
-            case NorthSize -> getYDown() + 15;
-            case EastSize -> getXLeft() - 15;
-            case SouthSize -> getYUp() - 15;
-            case WestSize -> getXRight() + 15;
+            case NorthSize -> getYDown() + 10;
+            case EastSize -> getXLeft() - 10;
+            case SouthSize -> getYUp() - 10;
+            case WestSize -> getXRight() + 10;
         };
     }
 
     public int getTurnLeftPointEmer() {
         return switch (this) {
-            case NorthSize -> getYDown() + 105;
-            case EastSize -> getXLeft() - 105;
-            case SouthSize -> getYUp() - 105;
-            case WestSize -> getXRight() + 105;
+            case NorthSize -> getYDown() + 70;
+            case EastSize -> getXLeft() - 70;
+            case SouthSize -> getYUp() - 70;
+            case WestSize -> getXRight() + 70;
         };
     }
 
     public int getTurnRightPointEmer() {
         return switch (this) {
-            case NorthSize -> getYDown() + 75;
-            case EastSize -> getXLeft() - 75;
-            case SouthSize -> getYUp() - 75;
-            case WestSize -> getXRight() + 75;
+            case NorthSize -> getYDown() + 50;
+            case EastSize -> getXLeft() - 50;
+            case SouthSize -> getYUp() - 50;
+            case WestSize -> getXRight() + 50;
         };
     }
 

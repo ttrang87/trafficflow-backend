@@ -128,7 +128,7 @@ public class InboundLane extends BaseLane{
                     CarBrand curBrand = current.getBrand();
                     CarBrand frontBrand = newFront.getBrand();
 
-                    int addition = curBrand.getLength() / 2 + frontBrand.getLength() / 2 + 28;
+                    int addition = curBrand.getLength() / 2 + frontBrand.getLength() / 2 + 18;
                     newDangerous = (direction == 1 || direction == 3)
                             ? Math.abs(current.getX() - newFront.getX()) - addition
                             : Math.abs(current.getY() - newFront.getY()) - addition;

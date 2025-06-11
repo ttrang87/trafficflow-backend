@@ -75,7 +75,7 @@ public abstract class Motion {
         if (switchingLane) {
             switchProgress += speed;
 
-            int shiftAmount = 28; // lane width
+            int shiftAmount = 18; // lane width
             if (changeLane.equals("LEFT")) {
                 switch (direction) {
                     case 0 -> x -= speed;
