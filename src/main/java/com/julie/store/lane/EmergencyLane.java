@@ -41,16 +41,12 @@ public class EmergencyLane extends BaseLane {
     public void removeVehicle(Vehicle vehicle) {
         int x = vehicle.getX();
         int y = vehicle.getY();
-        if (x > this.size.getXRight()
-                || x < this.size.getXLeft()
-                || y < this.size.getYUp()
-                || y > this.size.getYDown()) {
+        if (x < RoadSize.WestSize.getXLeft() ||
+                x > RoadSize.EastSize.getXRight() ||
+                y < RoadSize.NorthSize.getYUp() ||
+                y > RoadSize.SouthSize.getYDown()) {
             // CHANGE 3: Use poll() instead of removeFirst()
-            Vehicle removed = this.lane.pollFirst(); // Removes and returns first element
-            if (removed != null) { // Safety check
-                this.centerArea.addVehicle(removed);
-                removed.changeOutLane();
-            }
+            this.lane.pollFirst(); // Removes and returns first element
         }
     }
 

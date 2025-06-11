@@ -71,10 +71,6 @@ public abstract class Motion {
 
     public boolean getSwitch() {return this.switchingLane; };
 
-    public void setSwitch(boolean switching) {
-        this.switchingLane = switching;
-    }
-
     public void goStraight() {
         if (switchingLane) {
             switchProgress += speed;
@@ -105,6 +101,8 @@ public abstract class Motion {
 
             }
         }
+
+
 
         switch (direction) {
             case 0 -> y -= speed;

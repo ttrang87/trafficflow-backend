@@ -40,7 +40,7 @@ public class RoadService {
     }
 
     public void randomAddVehicle() {
-        boolean[] weightedProb = { true, false, false};
+        boolean[] weightedProb = { true, false};
         boolean add = weightedProb[random.nextInt(weightedProb.length)];
         if (!add) {
             return;
@@ -66,9 +66,9 @@ public class RoadService {
             }
         }
 
-        weightedNumbers.add(6);
-        weightedNumbers.add(7);
-        weightedNumbers.add(8);
+//        weightedNumbers.add(6);
+//        weightedNumbers.add(7);
+//        weightedNumbers.add(8);
 
         int indexCar = weightedNumbers.get(random.nextInt(weightedNumbers.size()));
         boolean isEmergency = indexCar == 6 || indexCar == 7 || indexCar == 8;
@@ -127,7 +127,6 @@ public class RoadService {
             Vehicle newVehicle = new Vehicle(newX, newY, sourceRoad, goalRoad, CarBrand.values()[indexCar]);
             if (isEmergency) {
                 sourceRoad.getEmergencyLaneOut().addVehicle(newVehicle);
-                System.out.println("EMERGENCY VEHICLE DETECTED - CHANGING ALL LIGHTS TO RED");
                 changeLightEmergency();
             } else {
                 if (relationship == 1) {
@@ -160,8 +159,18 @@ public class RoadService {
             west.getLight().resume();
         }
     }
-    public boolean checkEmergency (Road road) {
-        return road.getEmergencyLaneOut().getLane().isEmpty();
+    public boolean checkAllEmergencyVehicles() {
+        boolean northEmpty = north.getEmergencyLaneOut().getLane().isEmpty() &&
+                north.getEmergencyLaneIn().getLane().isEmpty();
+        boolean eastEmpty = east.getEmergencyLaneOut().getLane().isEmpty() &&
+                east.getEmergencyLaneIn().getLane().isEmpty();
+        boolean southEmpty = south.getEmergencyLaneOut().getLane().isEmpty() &&
+                south.getEmergencyLaneIn().getLane().isEmpty();
+        boolean westEmpty = west.getEmergencyLaneOut().getLane().isEmpty() &&
+                west.getEmergencyLaneIn().getLane().isEmpty();
+        boolean centerEmpty = checkCenterArea(centerArea);
+
+        return northEmpty && eastEmpty && southEmpty && westEmpty && centerEmpty;
     }
 
     public boolean checkCenterArea (CenterArea centerArea) {
@@ -179,14 +188,7 @@ public class RoadService {
 
 
     public void resumeAfterEmergency() {
-        boolean northEmpty = checkEmergency(north);
-        boolean eastEmpty = checkEmergency(east);
-        boolean southEmpty = checkEmergency(south);
-        boolean westEmpty = checkEmergency(west);
-        boolean centerEmpty = checkCenterArea(centerArea);
-
-        if (northEmpty && eastEmpty && southEmpty && westEmpty && centerEmpty ) {
-            System.out.println("LIGHT RESUME");
+        if (checkAllEmergencyVehicles() ) {
             resumeLight();
         }
     }
@@ -291,18 +293,18 @@ public class RoadService {
         simulationLauncher.startInboundLane(west.getLane1());
         simulationLauncher.startInboundLane(west.getLane2());
 
-//        executorService.scheduleAtFixedRate(() -> {
-//            centerArea.printAllVehiclesInfo();
-//            north.getLane1().printAllVehiclesInfo();
-//            north.getLane2().printAllVehiclesInfo();
-//            east.getLane1().printAllVehiclesInfo();
-//            east.getLane2().printAllVehiclesInfo();
-//            south.getLane1().printAllVehiclesInfo();
-//            south.getLane2().printAllVehiclesInfo();
-//            west.getLane1().printAllVehiclesInfo();
-//            west.getLane2().printAllVehiclesInfo();
-//            System.out.println("--------------------------------------");
-//        }, 0, 100, TimeUnit.MILLISECONDS);
+        executorService.scheduleAtFixedRate(() -> {
+            centerArea.printAllVehiclesInfo();
+            north.getLane1().printAllVehiclesInfo();
+            north.getLane2().printAllVehiclesInfo();
+            east.getLane1().printAllVehiclesInfo();
+            east.getLane2().printAllVehiclesInfo();
+            south.getLane1().printAllVehiclesInfo();
+            south.getLane2().printAllVehiclesInfo();
+            west.getLane1().printAllVehiclesInfo();
+            west.getLane2().printAllVehiclesInfo();
+            System.out.println("--------------------------------------");
+        }, 0, 100, TimeUnit.MILLISECONDS);
 
     }
 

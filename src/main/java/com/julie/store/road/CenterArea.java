@@ -54,11 +54,13 @@ public class CenterArea {
     private boolean isOutOfBounds(Vehicle vehicle) {
         int x = vehicle.getX();
         int y = vehicle.getY();
+
         return x < RoadSize.NorthSize.getXLeft()
                 || x > RoadSize.NorthSize.getXRight()
                 || y < RoadSize.NorthSize.getYDown()
                 || y > RoadSize.SouthSize.getYUp();
     }
+
 
     private void transferToTargetInboundLane(Vehicle vehicle) {
         vehicle.changeOutLane();

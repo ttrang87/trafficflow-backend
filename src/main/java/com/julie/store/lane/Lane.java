@@ -3,7 +3,6 @@ package com.julie.store.lane;
 import com.julie.store.TrafficLight;
 import com.julie.store.road.CenterArea;
 import com.julie.store.road.RoadSize;
-import com.julie.store.vehicle.CarBrand;
 import com.julie.store.vehicle.Vehicle;
 
 import java.util.ArrayList;
@@ -11,7 +10,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class Lane extends BaseLane {
-    // CHANGE 1: Replace ArrayList with ConcurrentLinkedDeque (get last)
     private final ConcurrentLinkedDeque<Vehicle> lane = new ConcurrentLinkedDeque<>();
     private final TrafficLight trafficLight;
 
@@ -21,12 +19,11 @@ public class Lane extends BaseLane {
     }
 
     public List<Vehicle> getLane() {
-        // CHANGE 2: Convert queue to list for compatibility
         return new ArrayList<>(this.lane);
     }
 
     public void addVehicle(Vehicle vehicle) {
-        this.lane.offer(vehicle); // or lane.add(vehicle) - both work the same
+        this.lane.offer(vehicle);
     }
 
     public Vehicle getLastVehicle() {
@@ -38,13 +35,12 @@ public class Lane extends BaseLane {
         int y = firstVehicle.getY();
         int length = firstVehicle.getBrand().getLength();
         int ind = size.ordinal();
-        int pedestrianLine = 25;
 
         return switch (ind) {
-            case 0 -> size.getYDown() - y - length / 2 - pedestrianLine;
-            case 1 -> x - size.getXLeft() - length / 2 - pedestrianLine;
-            case 2 -> y - size.getYUp() - length / 2 - pedestrianLine;
-            default -> size.getXRight() - x - length / 2 - pedestrianLine;
+            case 0 -> size.getYDown() - y - length / 2 - 5;
+            case 1 -> x - size.getXLeft() - length / 2 - 5;
+            case 2 -> y - size.getYUp() - length / 2 - 5;
+            default -> size.getXRight() - x - length / 2 - 5;
         };
     }
 
@@ -64,7 +60,6 @@ public class Lane extends BaseLane {
         }
     }
 
-    // CHANGE 4: New method to update dangerous distances for queue
     public void updateAllDangerousDistances() {
         // Convert to array for indexed access
         Vehicle[] vehicles = lane.toArray(new Vehicle[0]);
@@ -90,7 +85,13 @@ public class Lane extends BaseLane {
 
         updateAllDangerousDistances();
 
-        // CHANGE 6: Iterate safely over remaining vehicles
+        try {
+            Thread.sleep(50); // Small delay to prevent immediate following
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+
         Vehicle[] vehicles = lane.toArray(new Vehicle[0]);
         for (int i = 1; i < vehicles.length; i++) {
             vehicles[i].moveSafe();
@@ -104,12 +105,19 @@ public class Lane extends BaseLane {
         Vehicle first = lane.peekFirst();
         if (first == null) return;
 
-        first.changeDangerousDistance(calculateCenterDistance(first));
+        first.changeDangerousDistance(calculateCenterDistance(first) - 10);
         first.changeSpeed(first.getInitialSpeed() - 1);
         first.moveSafe();
         removeVehicle(first);
 
         updateAllDangerousDistances();
+
+        try {
+            Thread.sleep(50); // Small delay to prevent immediate following
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
 
         Vehicle[] vehicles = lane.toArray(new Vehicle[0]);
         for (int i = 1; i < vehicles.length; i++) {
@@ -124,7 +132,7 @@ public class Lane extends BaseLane {
         Vehicle first = lane.peekFirst();
         if (first == null) return;
 
-        first.changeDangerousDistance(Math.min(calculateBoundary(first), calculateCenterDistance(first)));
+        first.changeDangerousDistance(calculateBoundary(first));
         first.moveSafe();
 
         updateAllDangerousDistances();

@@ -9,14 +9,16 @@ import com.julie.store.vehicle.Vehicle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class InboundLane extends BaseLane{
     // Use Collections.synchronizedList with ArrayList for optimal indexed access
     private final List<Vehicle> lane = Collections.synchronizedList(new ArrayList<Vehicle>());
     private InboundLane targetLane;
     private String changeLane;
-    private volatile boolean isSwitchingNow = false;
     private Road road;
+    //prevent same lane switch
+    private volatile boolean isSwitchInProgress = false;
 
     public InboundLane(RoadSize size, CenterArea centerArea) {
         super(size, centerArea);
@@ -49,10 +51,6 @@ public class InboundLane extends BaseLane{
         synchronized (lane) {
             lane.add(vehicle);
         }
-    }
-
-    public void changeIsSwitching(boolean newValue) {
-        this.isSwitchingNow = newValue;
     }
 
 
@@ -102,70 +100,73 @@ public class InboundLane extends BaseLane{
         return l;
     }
 
-    public synchronized void attemptChange() {
-        if (road.isSwitching()) { return; }
+    public void attemptChange() {
+        try {
+            List<Vehicle> laneSnapshot = new ArrayList<>(lane);
 
-        // Work with a snapshot to avoid concurrent modification
-        List<Vehicle> laneSnapshot = new ArrayList<>(lane);
-
-        for (int i = laneSnapshot.size() - 1; i > 0; i--) {
-            if (road.isSwitching()) { return; }
-            Vehicle current = laneSnapshot.get(i);
-
-             synchronized (lane) {
-                if (!lane.contains(current) || current.getSwitch()) {
-                    continue;
+            for (int i = laneSnapshot.size() - 1; i > 0; i--) {
+                if (isSwitchInProgress) {
+                    return;
                 }
-            }
 
-            int direction = size.ordinal();
-            int target = (direction == 1 || direction == 3)
-                    ? current.getX()
-                    : current.getY();
+                Vehicle current = laneSnapshot.get(i);
 
-            int largeIndex = binarySearch(target);
-            int newDangerous = Integer.MAX_VALUE;
-            int space = Integer.MAX_VALUE;
-            Vehicle prev = null;
 
-            if (largeIndex != -1) {
+                int direction = size.ordinal();
+                int target = (direction == 1 || direction == 3) ? current.getX() : current.getY();
+
+                int largeIndex = binarySearch(target);
+                int newDangerous = Integer.MAX_VALUE;
+                int space = Integer.MAX_VALUE;
+                Vehicle prev = null;
+
                 List<Vehicle> targetList = targetLane.getLane();
-                Vehicle newFront = targetList.get(largeIndex);
 
-                CarBrand curBrand = current.getBrand();
-                CarBrand frontBrand = newFront.getBrand();
+                if (largeIndex != -1) {
+                    Vehicle newFront = targetList.get(largeIndex);
+
+                    CarBrand curBrand = current.getBrand();
+                    CarBrand frontBrand = newFront.getBrand();
+
+                    int addition = curBrand.getLength() / 2 + frontBrand.getLength() / 2 + 28;
+                    newDangerous = (direction == 1 || direction == 3)
+                            ? Math.abs(current.getX() - newFront.getX()) - addition
+                            : Math.abs(current.getY() - newFront.getY()) - addition;
+                }
 
                 if (largeIndex < targetList.size() - 1) {
                     prev = targetList.get(largeIndex + 1);
-                    space = prev.getDangerousDistance() - prev.getSpeed() * 28 / current.getSpeed();
+                    int addition = current.getBrand().getLength() / 2 + prev.getBrand().getLength() / 2 + prev.getSpeed() * 28 / current.getInitialSpeed();
+                    space = (direction == 1 || direction == 3)
+                            ? Math.abs(current.getX() - prev.getX()) - addition
+                            : Math.abs(current.getY() - prev.getY()) - addition;
                 }
 
-                int addition = curBrand.getLength() / 2 + frontBrand.getLength() / 2;
-                newDangerous = (direction == 1 || direction == 3)
-                        ? Math.abs(current.getX() - newFront.getX()) - addition
-                        : Math.abs(current.getY() - newFront.getY()) - addition;
-            }
 
-            if (newDangerous - current.getDangerousDistance() >= 20 && space > current.getBrand().getLength() + 10) {
-                // Final check before switching - ensure still no switching happening
-                if (road.isSwitching()) { return; }
+                if (newDangerous - current.getDangerousDistance() >= 40 &&
+                        space > 20) {
 
-                road.setSwitching(true);
+                    if (!road.tryStartSwitching()) {
+                        return; // Another lane on this road is already switching
+                    }
 
-                if (prev != null) {
-                    prev.changeDangerousDistance(space - newDangerous);
+                    if (prev != null) {
+                        prev.changeDangerousDistance(space - newDangerous);
+                    }
+
+                    isSwitchInProgress = true;
+                    current.switchLane(changeLane, this, largeIndex);
+                    return;
                 }
-                current.setSwitch(true);
-                current.switchLane(changeLane, this, largeIndex);
-
-                return;
             }
+        } catch (Exception e) {
+            road.finishSwitching();// Ensure road-level permission is released on error
+            throw e;
         }
     }
 
-
+    // Updated completeLaneSwitch
     public synchronized void completeLaneSwitch(Vehicle vehicle, int insertIndex) {
-        // Remove from current lane
         synchronized (this.lane) {
             this.lane.remove(vehicle);
         }
@@ -178,9 +179,10 @@ public class InboundLane extends BaseLane{
             }
         }
 
-        road.setSwitching(false);
-    }
+        isSwitchInProgress = false;  // Simple assignment (same thread)
+        road.finishSwitching();
 
+    }
 
 
     public synchronized void updateAllDangerousDistances() {
@@ -241,14 +243,7 @@ public class InboundLane extends BaseLane{
                 updateAllDangerousDistances();
                 flow();
                 attemptChange();
-
-                // Reset switching flag after each cycle
-                if (isSwitchingNow) {
-                    Thread.sleep(50); // Shorter delay when switching
-                    changeIsSwitching(false);
-                } else {
-                    Thread.sleep(100);
-                }
+                Thread.sleep(100);
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

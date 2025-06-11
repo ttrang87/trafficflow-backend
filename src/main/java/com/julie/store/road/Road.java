@@ -8,6 +8,8 @@ import com.julie.store.vehicle.Vehicle;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Road {
     private final RoadSize size;
@@ -18,7 +20,23 @@ public class Road {
     private final InboundLane lane2;
     private final EmergencyLane emergencyLaneOut;
     private final EmergencyLane emergencyLaneIn;
-    public volatile boolean flag = false;
+    private final AtomicBoolean isSwitching = new AtomicBoolean(false);
+
+    // Remove the ReentrantLock - no longer needed
+    // private final ReentrantLock laneSwitchLock = new ReentrantLock();
+
+    public boolean tryStartSwitching() {
+        // Atomic compare-and-set: only succeeds if currently false
+        return isSwitching.compareAndSet(false, true);
+    }
+
+    public void finishSwitching() {
+        isSwitching.set(false);
+    }
+
+    public boolean isSwitching() {
+        return isSwitching.get();
+    }
 
     public Road(RoadSize size, TrafficLight trafficLight, CenterArea centerArea) {
         this.size = size;
@@ -63,15 +81,6 @@ public class Road {
     public InboundLane getLane2() {
         return this.lane2;
     }
-
-    public boolean isSwitching() {
-        return flag;
-    }
-
-    public void setSwitching(boolean value) {
-        this.flag = value;
-    }
-
 
 
     public List<Vehicle> getCombinedLaneVehicles() {
