@@ -45,8 +45,16 @@ public class EmergencyLane extends BaseLane {
                 x > RoadSize.EastSize.getXRight() ||
                 y < RoadSize.NorthSize.getYUp() ||
                 y > RoadSize.SouthSize.getYDown()) {
-            // CHANGE 3: Use poll() instead of removeFirst()
             this.lane.pollFirst(); // Removes and returns first element
+        } else if (x > this.size.getXRight()
+                || x < this.size.getXLeft()
+                || y < this.size.getYUp()
+                || y > this.size.getYDown()) {
+            Vehicle removed = this.lane.pollFirst(); // Removes and returns first element
+            if (removed != null) { // Safety check
+                this.centerArea.addVehicle(removed);
+                removed.changeOutLane();
+            }
         }
     }
 
