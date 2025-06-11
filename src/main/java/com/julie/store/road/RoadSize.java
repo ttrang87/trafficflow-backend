@@ -4,10 +4,10 @@ import org.springframework.stereotype.Component;
 
 public enum RoadSize {
 
-    NorthSize(420, 600, 40, 400),
-    EastSize(600, 960, 400, 580),
-    SouthSize(420, 600, 580, 940),
-    WestSize(60, 420, 400, 580);
+    NorthSize(420, 600, 20, 400),
+    EastSize(600, 980, 400, 580),
+    SouthSize(420, 600, 580, 960),
+    WestSize(40, 420, 400, 580);
 
 
     private final int xLeft;

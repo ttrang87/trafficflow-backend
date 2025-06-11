@@ -3,15 +3,15 @@ package com.julie.store.vehicle;
 import java.util.Random;
 
 public enum CarBrand {
-    Ford(3,4, 40, 20),
-    Audi(3,5, 46, 20),
-    Honda(3,4, 40, 20),
-    Toyota(3, 4, 40, 16),
-    Delivery(2,3, 58, 20),
-    MiniVan(2,3, 40, 20),
-    Ambulance(4, 6, 40, 16),
-    FireTruck(4,6, 50, 20),
-    Police(4, 6, 42, 18);
+    Ford(4,5, 40, 20),
+    Audi(4,5, 46, 20),
+    Honda(4,5, 40, 20),
+    Toyota(4, 5, 40, 16),
+    Delivery(3,4, 58, 20),
+    MiniVan(3,4, 40, 20),
+    Ambulance(5, 6, 40, 16),
+    FireTruck(5,6, 50, 20),
+    Police(5, 6, 42, 18);
 
 
     private final int lower;
