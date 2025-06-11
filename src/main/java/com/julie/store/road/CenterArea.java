@@ -1,4 +1,5 @@
 package com.julie.store.road;
+import com.julie.store.lane.BaseLane;
 import com.julie.store.vehicle.Vehicle;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,7 @@ public class CenterArea {
         }
     }
 
-    public void updateAllDangerousDistances() {
+    private void updateAllDangerousDistances() {
         synchronized (centerArea) {
             int n = centerArea.size();
 
@@ -46,9 +47,49 @@ public class CenterArea {
                     minDangerous = Math.min(minDangerous, gap);
                 }
 
+                if (curDir == current.getGoal().getRoadSize().ordinal()) {
+                    minDangerous = Math.min(minDangerous, calculateDistanceWithGoal(current));
+                }
+
                 current.changeDangerousDistance(minDangerous);
             }
         }
+    }
+
+    private int calculateDistanceWithGoal(Vehicle vehicle) {
+        Vehicle lastVehicle = getGoalVehicle(vehicle);
+
+        if (lastVehicle == null) {
+            return Integer.MAX_VALUE; // No vehicles in target lane
+        }
+
+        int dx = Math.abs(vehicle.getX() - lastVehicle.getX());
+        int dy = Math.abs(vehicle.getY() - lastVehicle.getY());
+        int distance = (int) Math.sqrt(dx * dx + dy * dy);
+        int addition = vehicle.getBrand().getLength() / 2 +
+                lastVehicle.getBrand().getLength() / 2 - 10;
+
+        return distance - addition;
+
+    }
+
+    private static Vehicle getGoalVehicle(Vehicle vehicle) {
+        BaseLane goalLane;
+        Road goal = vehicle.getGoal();
+        String relationship = vehicle.getRelationship();
+        int indexCar = vehicle.getBrand().ordinal();
+        boolean isEmergency = indexCar == 6 || indexCar == 7 || indexCar == 8;
+        if (isEmergency) {
+            goalLane = goal.getEmergencyLaneIn();
+        } else {
+            if ("RIGHT".equals(relationship)) {
+                goalLane = goal.getLane1();
+            } else {
+                goalLane = goal.getLane2();
+            }
+        }
+
+        return goalLane.getLastVehicle();
     }
 
     private boolean isOutOfBounds(Vehicle vehicle) {

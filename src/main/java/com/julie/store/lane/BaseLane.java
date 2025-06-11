@@ -49,7 +49,7 @@ public abstract class BaseLane {
                 int dy = Math.abs(v.getY() - y);
                 int rawDistance = (int) Math.sqrt(dx * dx + dy * dy);
                 int  addition = relation == 1 ? length / 2 + v.getBrand().getWidth() / 2 : length / 2 + v.getBrand().getLength() / 2;
-                minCenterDistance = Math.min(minCenterDistance, rawDistance - addition - 4);
+                minCenterDistance = Math.min(minCenterDistance, rawDistance - addition - 15);
             }
         }
 
