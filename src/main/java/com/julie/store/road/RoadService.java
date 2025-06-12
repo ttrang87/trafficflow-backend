@@ -415,7 +415,6 @@ public class RoadService {
         west.clean();
         centerArea.clear();
 
-        // Cancel tasks
         if (vehicleTask != null) {
             vehicleTask.cancel(true);
             vehicleTask = null;
