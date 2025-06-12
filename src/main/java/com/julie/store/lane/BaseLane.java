@@ -40,9 +40,6 @@ public abstract class BaseLane {
 
 
     public static void setRunning(boolean running) {
-        if (running) {
-            System.out.println("Restart lanes");
-        }
         BaseLane.running = running;
     }
 

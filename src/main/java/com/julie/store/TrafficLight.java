@@ -16,6 +16,10 @@ public class TrafficLight {
     protected static volatile boolean paused = false;
     protected static volatile boolean running = true;
 
+    public static int redDuration = 30;
+    public static int yellowDuration = 3;
+    public static int greenDuration = 7;
+
     public TrafficLight(String color, int second, int count) {
         this.color = color;
         this.second = second;
@@ -50,21 +54,48 @@ public class TrafficLight {
         return this.isEmergency;
     }
 
+    //This part contains methods for changing duration
+
+
+    public static int getRedDuration() {
+        return redDuration;
+    }
+
+    public static int getYellowDuration() {
+        return yellowDuration;
+    }
+
+    public static int getGreenDuration() {
+        return greenDuration;
+    }
+
+    public static void setRedDuration(int newRedDuration) {
+        redDuration = newRedDuration;
+    }
+
+    public static void setYellowDuration(int newYellowDuration) {
+        yellowDuration = newYellowDuration;
+    }
+
+    public static void setGreenDuration(int newGreenDuration) {
+        greenDuration = newGreenDuration;
+    }
+
     public void changeGreen() {
         this.color = "YELLOW";
-        this.second = 3;
+        this.second = yellowDuration;
         this.count = 0;
     }
 
     public void changeYellow() {
         this.color = "RED";
-        this.second = 30;
+        this.second = redDuration;
         this.count = 0;
     }
 
     public void changeRed() {
         this.color = "GREEN";
-        this.second = 7;
+        this.second = greenDuration;
         this.count = 0;
     }
 

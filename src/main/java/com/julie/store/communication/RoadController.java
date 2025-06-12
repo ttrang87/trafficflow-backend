@@ -40,7 +40,6 @@ public class RoadController {
     @PostMapping("/monitor")
     public void setMonitor(@RequestBody Map<String, String> request) {
         String newStatus = request.get("status");
-        System.out.println("Frontend send me status: " + newStatus);
         if (newStatus.equals("Pause")) {
             roadService.pauseAllLanes();
         } else if (newStatus.equals("Resume")) {
@@ -48,5 +47,15 @@ public class RoadController {
         } else {
             roadService.reset();
         }
+    }
+
+    @GetMapping("/set-light-duration")
+    public Map<String, Integer> getLightDuration() { return roadService.getLightDuration(); }
+
+    @PostMapping("/set-light-duration")
+    public void setLightDuration(@RequestBody Map<String, Integer> request) {
+        int newGreen = request.get("green");
+        int newYellow = request.get("yellow");
+        roadService.modifyTrafficLightDuration(newGreen, newYellow);
     }
 }

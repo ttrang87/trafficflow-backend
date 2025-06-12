@@ -37,12 +37,16 @@ public class RoadService {
     private String level = "Normal";
     private String density = "Normal";
 
+    int green = TrafficLight.getGreenDuration();
+    int red = TrafficLight.getRedDuration();
+    int yellow = TrafficLight.getYellowDuration();
+
     public RoadService(CenterArea centerArea, SimulationLauncher simulationLauncher) {
         this.centerArea = centerArea;
-        this.north = new Road(RoadSize.NorthSize, new TrafficLight("GREEN", 7, 0), centerArea);
-        this.east = new Road(RoadSize.EastSize, new TrafficLight("RED", 30, 20), centerArea);
-        this.south = new Road(RoadSize.SouthSize, new TrafficLight("RED", 30, 10), centerArea);
-        this.west = new Road(RoadSize.WestSize, new TrafficLight("RED", 30, 0), centerArea);
+        this.north = new Road(RoadSize.NorthSize, new TrafficLight("GREEN", green, 0), centerArea);
+        this.east = new Road(RoadSize.EastSize, new TrafficLight("RED", red, red - yellow - green), centerArea);
+        this.south = new Road(RoadSize.SouthSize, new TrafficLight("RED", red, red - 2 * (yellow + green)), centerArea);
+        this.west = new Road(RoadSize.WestSize, new TrafficLight("RED", red, red - 3 * (yellow + green)), centerArea);
         this.simulationLauncher = simulationLauncher;
         this.executorService = Executors.newSingleThreadScheduledExecutor();
     }
@@ -426,22 +430,21 @@ public class RoadService {
     }
 
     public void resetTrafficLights() {
-        System.out.println("Restart Traffic Light");
-        north.getLight().reset("GREEN", 7, 0);
-        east.getLight().reset("RED", 30, 20);
-        south.getLight().reset("RED", 30, 10);
-        west.getLight().reset("RED", 30, 0);
+        int green = TrafficLight.getGreenDuration();   // ✅ NEW data
+        int red = TrafficLight.getRedDuration();       // ✅ NEW data
+        int yellow = TrafficLight.getYellowDuration();
+        north.getLight().reset("GREEN", green, 0);
+        east.getLight().reset("RED", red, red - yellow - green);
+        south.getLight().reset("RED", red, red - 2 * (yellow + green));
+        west.getLight().reset("RED", red, red - 3 * (yellow + green));
         TrafficLight.setRunning(true);
     }
 
     public void reset() {
-        System.out.println("Hi i called reset");
         stopComponents();
-        System.out.println("I cleaned all vehicles: " + getCarsForChangeSpeed().size() );
         TrafficLight.setRunning(false);
         BaseLane.setRunning(false);
         centerArea.setRunning(false);
-
 
         try {
             Thread.sleep(1000);
@@ -454,6 +457,22 @@ public class RoadService {
         centerArea.setRunning(true);
         resetTrafficLights();
         startSimulation();
+    }
+
+    //This part contains logic for modifying traffic light durations
+    public void modifyTrafficLightDuration(int newGreen, int newYellow) {
+        TrafficLight.setGreenDuration(newGreen);
+        TrafficLight.setYellowDuration(newYellow);
+        TrafficLight.setRedDuration(3 * (newGreen + newYellow));
+
+    }
+
+    public Map<String, Integer> getLightDuration() {
+        return Map.of(
+                "RED", TrafficLight.getRedDuration(),
+                "GREEN", TrafficLight.getGreenDuration(),
+                "YELLOW", TrafficLight.getYellowDuration()
+        );
     }
 
 
