@@ -73,6 +73,7 @@ public class CenterArea {
 
     }
 
+
     private static Vehicle getGoalVehicle(Vehicle vehicle) {
         BaseLane goalLane;
         Road goal = vehicle.getGoal();
@@ -88,6 +89,8 @@ public class CenterArea {
                 goalLane = goal.getLane2();
             }
         }
+
+        if (goalLane.getLane().isEmpty()) { return null; }
 
         return goalLane.getLastVehicle();
     }
@@ -119,6 +122,33 @@ public class CenterArea {
             }
         }
     }
+
+    public double calculateLaneAverageSpeed() {
+        if (centerArea.isEmpty()) return 0.0;
+
+        double totalSpeed = 0.0;
+        for (Vehicle v : centerArea) {
+            totalSpeed += v.getAvgSpeed();
+        }
+
+        return totalSpeed / centerArea.size();
+    }
+
+//    public double calculateAverageWaitTime() {
+//        if (centerArea.isEmpty()) return 0.0;
+//
+//        int totalWaitTime = 0;
+//        int count = 0;
+//        for (Vehicle v : centerArea) {
+//            if (v.getWaitTime() > 0) {
+//                totalWaitTime += v.getWaitTime();
+//                count ++;
+//            }
+//        }
+//
+//        if (count == 0) return 0.0;
+//        return (double) totalWaitTime / count;
+//    }
 
     public void printAllVehiclesInfo() {
         System.out.println("---- Vehicles in CenterArea ----");

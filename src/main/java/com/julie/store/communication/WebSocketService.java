@@ -24,4 +24,19 @@ public class WebSocketService {
     public void sendTrafficLightUpdates() {
         messagingTemplate.convertAndSend("/topic/traffic-light", roadService.getTrafficLightColors());
     }
+
+    @Scheduled(fixedRate = 100)
+    public void sendTotalVehicles() {
+        messagingTemplate.convertAndSend("/topic/number-of-vehicles", roadService.getCountCar());
+    }
+
+    @Scheduled(fixedRate = 1000)
+    public void sendAvgSpeed() {
+        messagingTemplate.convertAndSend("/topic/avg-speed", roadService.getAvgSpeed());
+    }
+
+    @Scheduled(fixedRate = 500)
+    public void sendAvgWaitTime() {
+        messagingTemplate.convertAndSend("/topic/avg-wait", roadService.calculateAverageWaitTime());
+    }
 }

@@ -94,4 +94,36 @@ public class Road {
         return combined;
     }
 
+    public double calculateLaneAverageSpeed() {
+        double totalSpeed = 0.0;
+        int count = 0;
+
+        double s;
+
+        if ((s = rightMost.calculateLaneAverageSpeed()) > 0) { totalSpeed += s; count++; }
+        if ((s = rightMiddle.calculateLaneAverageSpeed()) > 0) { totalSpeed += s; count++; }
+        if ((s = lane1.calculateLaneAverageSpeed()) > 0) { totalSpeed += s; count++; }
+        if ((s = lane2.calculateLaneAverageSpeed()) > 0) { totalSpeed += s; count++; }
+        if ((s = emergencyLaneIn.calculateLaneAverageSpeed()) > 0) { totalSpeed += s; count++; }
+        if ((s = emergencyLaneOut.calculateLaneAverageSpeed()) > 0) { totalSpeed += s; count++; }
+
+        if (count == 0) return 0.0;
+        return totalSpeed / count;
+    }
+
+    public double calculateAverageWaitTime() {
+        double totalWait = 0.0;
+        int count = 0;
+
+        double s;
+
+        if ((s = rightMost.calculateAverageWaitTime()) > 0) { totalWait += s; count++; }
+        if ((s = rightMiddle.calculateAverageWaitTime()) > 0) { totalWait += s; count++; }
+        if ((s = emergencyLaneOut.calculateAverageWaitTime()) > 0) { totalWait += s; count++; }
+
+        if (count == 0) return 0.0;
+        return totalWait / count;
+    }
+
+
 }

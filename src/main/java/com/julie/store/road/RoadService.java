@@ -8,10 +8,10 @@ import com.julie.store.vehicle.Vehicle;
 import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -244,6 +244,53 @@ public class RoadService {
                 "West", west.getCombinedLaneVehicles(),
                 "CenterArea", centerArea.getCenterArea()
         );
+    }
+
+    public int getCountCar() {
+        int count = 0;
+        count += north.getCombinedLaneVehicles().size();
+        count += east.getCombinedLaneVehicles().size();
+        count += south.getCombinedLaneVehicles().size();
+        count += west.getCombinedLaneVehicles().size();
+        count += centerArea.getCenterArea().size();
+        return count;
+    }
+
+    public double getAvgSpeed() {
+        double totalSpeed = 0.0;
+
+        totalSpeed += north.calculateLaneAverageSpeed();
+        totalSpeed += east.calculateLaneAverageSpeed();
+        totalSpeed += south.calculateLaneAverageSpeed();
+        totalSpeed += west.calculateLaneAverageSpeed();
+        totalSpeed += centerArea.calculateLaneAverageSpeed();
+
+        double avgSpeed = totalSpeed / 5.0;
+
+        // Force 2-digit rounding, strictly
+        BigDecimal bd = new BigDecimal(avgSpeed).setScale(1, RoundingMode.HALF_UP);
+        return bd.doubleValue();
+    }
+
+    public double calculateAverageWaitTime() {
+        double totalWait = 0.0;
+        int count = 0;
+
+        double s;
+
+        if ((s = north.calculateAverageWaitTime()) > 0) { totalWait += s; count++; }
+        if ((s = east.calculateAverageWaitTime()) > 0) { totalWait += s; count++; }
+        if ((s = south.calculateAverageWaitTime()) > 0) { totalWait += s; count++; }
+        if ((s = west.calculateAverageWaitTime()) > 0) { totalWait += s; count++; }
+
+        if (count == 0) return 0.0;
+
+
+        double avgWaitTime = totalWait / count / 10;
+
+        // Force 2-digit rounding, strictly
+        BigDecimal bd = new BigDecimal(avgWaitTime).setScale(1, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 
     public void startSimulation() {

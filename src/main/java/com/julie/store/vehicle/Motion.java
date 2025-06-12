@@ -2,7 +2,6 @@ package com.julie.store.vehicle;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.julie.store.lane.InboundLane;
-import com.julie.store.lane.Lane;
 import com.julie.store.road.Road;
 import com.julie.store.road.RoadSize;
 
@@ -25,6 +24,10 @@ public abstract class Motion {
     @JsonIgnore
     private InboundLane currentLane;
     private int insertIndex;
+
+    private int totalTravelDistance = 0;
+    private int totalTravelTime = 0;
+    private int waitTime = 0;
 
 
     public Motion(int x, int y, int initialSpeed, Road position, Road goal){
@@ -71,7 +74,20 @@ public abstract class Motion {
 
     public boolean getSwitch() {return this.switchingLane; };
 
+    public double getAvgSpeed() {
+        if (totalTravelTime == 0) return 0.0;
+        return (double) totalTravelDistance / totalTravelTime;
+    }
+
+    public int getWaitTime() { return waitTime; }
+
     public void goStraight() {
+        totalTravelDistance += speed;
+        totalTravelTime += 1;
+        if (speed == 0) {
+            waitTime ++;
+        }
+
         if (switchingLane) {
             switchProgress += speed;
 
@@ -101,8 +117,6 @@ public abstract class Motion {
 
             }
         }
-
-
 
         switch (direction) {
             case 0 -> y -= speed;

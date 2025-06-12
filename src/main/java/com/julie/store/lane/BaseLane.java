@@ -56,6 +56,36 @@ public abstract class BaseLane {
         return minCenterDistance;
     }
 
+    public double calculateLaneAverageSpeed() {
+        List<Vehicle> vehicles = getLane();
+        if (vehicles.isEmpty()) return 0.0;
+
+        double totalSpeed = 0.0;
+        for (Vehicle v : vehicles) {
+            totalSpeed += v.getAvgSpeed();
+        }
+
+        return totalSpeed / vehicles.size();
+    }
+
+    public double calculateAverageWaitTime() {
+        List<Vehicle> vehicles = getLane();
+        if (vehicles.isEmpty()) return 0.0;
+
+        int totalWaitTime = 0;
+        int count = 0;
+        for (Vehicle v : vehicles) {
+            if (v.getWaitTime() > 0) {
+                totalWaitTime += v.getWaitTime();
+                count ++;
+            }
+        }
+        if (count == 0) return 0.0;
+
+        return (double) totalWaitTime / count;
+    }
+
+
 
     public void printAllVehiclesInfo() {
         List<Vehicle> vehicles = getLane();
@@ -67,7 +97,8 @@ public abstract class BaseLane {
                     " Dangerous: " + vehicle.getDangerousDistance() +
                     " Speed: " + vehicle.getSpeed() +
                     " x, y: " + vehicle.getX() + " " + vehicle.getY() +
-                    " IsSwitch: " + vehicle.getSwitch());
+                    " IsSwitch: " + vehicle.getSwitch() +
+                    "AvgSpeed: " + vehicle.getAvgSpeed());
         }
         System.out.println("-------------------------------");
     }
