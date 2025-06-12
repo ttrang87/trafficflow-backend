@@ -62,6 +62,10 @@ public class TrafficLight {
         return this.color;
     }
 
+    public int getCount() {
+        return this.count;
+    }
+
     public boolean getEmergency(){
         return this.isEmergency;
     }

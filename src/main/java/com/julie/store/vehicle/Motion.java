@@ -8,7 +8,7 @@ import com.julie.store.road.RoadSize;
 public abstract class Motion {
     private int x;
     private int y;
-    private final int initialSpeed;
+    private int initialSpeed;
     @JsonIgnore
     private final Road position;
     @JsonIgnore
@@ -68,7 +68,11 @@ public abstract class Motion {
 
     public int getSpeed() { return this.speed; }
 
+    public void setSpeed(int newSpeed) { this.speed = newSpeed; }
+
     public int getInitialSpeed() { return this.initialSpeed; }
+
+    public void setInitialSpeed(int newInitialSpeed) { this.initialSpeed = newInitialSpeed; }
 
     public int getDangerousDistance() { return this.dangerousDistance; }
 

@@ -29,6 +29,8 @@ public class RoadService {
     private final CenterArea centerArea;
     private final ScheduledExecutorService executorService;
 
+    private String level = "Normal";
+
     public RoadService(CenterArea centerArea, SimulationLauncher simulationLauncher) {
         this.centerArea = centerArea;
         this.north = new Road(RoadSize.NorthSize, new TrafficLight("GREEN", 7, 0), centerArea);
@@ -125,6 +127,7 @@ public class RoadService {
 
         if (check) {
             Vehicle newVehicle = new Vehicle(newX, newY, sourceRoad, goalRoad, CarBrand.values()[indexCar]);
+            modifyNewVehicleSpeed(newVehicle);  //modify speed right after creating to fit with system
             if (isEmergency) {
                 sourceRoad.getEmergencyLaneOut().addVehicle(newVehicle);
                 changeLightEmergency();
@@ -218,12 +221,24 @@ public class RoadService {
         );
     }
 
-    public Map<String, String> getTrafficLightColors() {
+    public Map<String, Map<String, Object>> getTrafficLightColors() {
         return Map.of(
-                "North", north.getLight().getColor(),
-                "East", east.getLight().getColor(),
-                "South", south.getLight().getColor(),
-                "West", west.getLight().getColor()
+                "North", Map.of(
+                        "color", north.getLight().getColor(),
+                        "count", north.getLight().getCount()
+                ),
+                "East", Map.of(
+                        "color", east.getLight().getColor(),
+                        "count", east.getLight().getCount()
+                ),
+                "South", Map.of(
+                        "color", south.getLight().getColor(),
+                        "count", south.getLight().getCount()
+                ),
+                "West", Map.of(
+                        "color", west.getLight().getColor(),
+                        "count", west.getLight().getCount()
+                )
         );
     }
 
@@ -287,14 +302,73 @@ public class RoadService {
 
 
         double avgWaitTime = totalWait / count / 10;
-
-        // Force 2-digit rounding, strictly
         BigDecimal bd = new BigDecimal(avgWaitTime).setScale(1, RoundingMode.HALF_UP);
         return bd.doubleValue();
     }
 
+    //This part contains method for update speed
+
+    public void setLevel(String newLevel) {
+        if (!newLevel.equals(this.level)) {
+//            System.out.println("At line 312, current level is: " + level);
+            updateAllVehicleSpeeds(newLevel);
+            this.level = newLevel;
+        }
+    }
+
+    public void modifySpeed(Vehicle vehicle, String newLevel) {
+        int curInitialSpeed = vehicle.getInitialSpeed();
+        if (newLevel.equals("Slow")) {
+            if (this.level.equals("Fast")) {
+                vehicle.setInitialSpeed(curInitialSpeed - 4);
+                System.out.println("Its new ini speed is: " + vehicle.getInitialSpeed());
+            } else {
+                vehicle.setInitialSpeed(curInitialSpeed - 2);
+            }
+        } else if (newLevel.equals("Fast")) {
+            if (this.level.equals("Slow")) {
+                vehicle.setInitialSpeed(curInitialSpeed + 4);
+            } else {
+                vehicle.setInitialSpeed(curInitialSpeed + 2);
+            }
+        } else {
+            if (this.level.equals("Fast")) {
+                vehicle.setInitialSpeed(curInitialSpeed - 2);
+            } else {
+                vehicle.setInitialSpeed(curInitialSpeed + 2);
+            }
+        }
+
+        if (vehicle.getSpeed() == curInitialSpeed) {vehicle.setSpeed(vehicle.getInitialSpeed()); }
+    }
+
+    public void modifyNewVehicleSpeed(Vehicle vehicle) {
+        int curInitialSpeed = vehicle.getInitialSpeed();
+        if (this.level.equals("Fast")) {
+            vehicle.setInitialSpeed(curInitialSpeed + 2);
+        } else if (this.level.equals("Slow")) {
+            vehicle.setInitialSpeed(curInitialSpeed - 2);
+        }
+    }
+
+    public List<Vehicle> getCarsForChangeSpeed() {
+        List<Vehicle> allVehicles = new ArrayList<>();
+        allVehicles.addAll(north.getCombinedLaneVehicles());
+        allVehicles.addAll(east.getCombinedLaneVehicles());
+        allVehicles.addAll(south.getCombinedLaneVehicles());
+        allVehicles.addAll(west.getCombinedLaneVehicles());
+        allVehicles.addAll(centerArea.getCenterArea());
+
+        return allVehicles;
+    }
+
+    public void updateAllVehicleSpeeds(String newLevel) {
+        for (Vehicle vehicle : getCarsForChangeSpeed()) {
+            modifySpeed(vehicle, newLevel);
+        }
+    }
+
     public void startSimulation() {
-        System.out.println("Starting simulation");
 
         executorService.scheduleAtFixedRate(this::randomAddVehicle, 0, 100, TimeUnit.MILLISECONDS);
         executorService.scheduleAtFixedRate(this::resumeAfterEmergency, 0, 300, TimeUnit.MILLISECONDS);

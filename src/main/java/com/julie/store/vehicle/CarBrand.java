@@ -18,7 +18,6 @@ public enum CarBrand {
     private final int upper;
     private final int length;
     private final int width;
-    private int level = 1;
 
     CarBrand(int lower, int upper, int length, int width) {
         this.lower = lower;
@@ -29,7 +28,7 @@ public enum CarBrand {
 
     public int getStartSpeed() {
         Random random = new Random();
-        return random.nextInt(lower, upper+1) * level;
+        return random.nextInt(lower, upper+1);
     }
 
     public int getLength() { return this.length; }

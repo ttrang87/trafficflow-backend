@@ -4,6 +4,8 @@ import com.julie.store.road.RoadService;
 import com.julie.store.vehicle.Vehicle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -21,4 +23,11 @@ public class RoadController {
     @GetMapping("/get-road-coordinate")
     public Map<String, Map<String, Integer>> getRoadCoordinate() {
         return roadService.getRoadCoordinates();
-    }}
+    }
+
+    @PostMapping("/set-speed-level")
+    public void setSpeedLevel(@RequestBody Map<String, String> request) {
+        String newLevel = request.get("level");
+        roadService.setLevel(newLevel);
+    }
+}
