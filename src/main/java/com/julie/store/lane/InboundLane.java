@@ -39,6 +39,8 @@ public class InboundLane extends BaseLane{
         }
     }
 
+    public void clear() {lane.clear();}
+
     public Vehicle getLastVehicle() {
         synchronized (lane) {
             if (lane.isEmpty()) return null;
@@ -238,13 +240,18 @@ public class InboundLane extends BaseLane{
     }
 
     public void operate() {
-        while (!Thread.currentThread().isInterrupted()) {
+        while (BaseLane.isRunning()) {
             try {
-                while (BaseLane.isPaused()) {
+                while (BaseLane.isPaused() && BaseLane.isRunning()) {
                     synchronized (pauseLock) {
                         pauseLock.wait();
                     }
                 }
+
+                if (!BaseLane.isRunning()) {
+                    break;
+                }
+
                 updateAllDangerousDistances();
                 flow();
                 attemptChange();

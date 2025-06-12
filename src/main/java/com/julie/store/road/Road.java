@@ -82,6 +82,15 @@ public class Road {
         return this.lane2;
     }
 
+    public void clean() {
+        rightMost.clear();
+        rightMiddle.clear();
+        lane1.clear();
+        lane2.clear();
+        emergencyLaneIn.clear();
+        emergencyLaneOut.clear();
+    }
+
 
     public List<Vehicle> getCombinedLaneVehicles() {
         List<Vehicle> combined = new ArrayList<>();

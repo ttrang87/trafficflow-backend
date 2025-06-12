@@ -12,6 +12,7 @@ public abstract class BaseLane {
     protected final CenterArea centerArea;
     protected static final Object pauseLock = new Object();
     protected static volatile boolean paused = false;
+    protected static volatile boolean running = true;
 
     public BaseLane(RoadSize size, CenterArea centerArea) {
         this.size = size;
@@ -36,6 +37,19 @@ public abstract class BaseLane {
     public static boolean isPaused() {
         return paused;
     }
+
+
+    public static void setRunning(boolean running) {
+        if (running) {
+            System.out.println("Restart lanes");
+        }
+        BaseLane.running = running;
+    }
+
+    public static boolean isRunning() {
+        return running;
+    }
+
     // Common method for calculating separation distance
     protected int calculateSeparationDistance(Vehicle current, Vehicle front) {
         int dx = Math.abs(current.getX() - front.getX());

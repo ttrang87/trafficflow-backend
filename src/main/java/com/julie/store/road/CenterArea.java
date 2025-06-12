@@ -15,6 +15,7 @@ public class CenterArea {
     private final List<Vehicle> centerArea = Collections.synchronizedList(new LinkedList<>());
     protected final Object pauseLock = new Object();
     protected volatile boolean paused = false;
+    protected volatile boolean running = true;
 
 
     public void addVehicle(Vehicle vehicle) {
@@ -26,6 +27,8 @@ public class CenterArea {
             return new ArrayList<>(centerArea);
         }
     }
+
+    public void clear() { centerArea.clear(); }
 
     private void updateAllDangerousDistances() {
         synchronized (centerArea) {
@@ -159,14 +162,25 @@ public class CenterArea {
         }
     }
 
+    public void setRunning(boolean isRunning) {
+        running = isRunning;
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+
     public void operate() {
-        while (!Thread.currentThread().isInterrupted()) {
+        while (running) {
             try {
                 synchronized (pauseLock) {
-                    while (paused) {
+                    while (paused && running) {
                         pauseLock.wait(); // 🚧 Block until resumed
                     }
                 }
+
+                if (!running) { break; }
                 updateAllDangerousDistances();
 
                 // FIXED: Proper iterator removal with synchronized list

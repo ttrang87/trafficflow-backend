@@ -24,6 +24,8 @@ public class Lane extends BaseLane {
         return new ArrayList<>(this.lane);
     }
 
+    public void clear() {lane.clear();}
+
     public void addVehicle(Vehicle vehicle) {
         this.lane.offer(vehicle);
     }
@@ -147,13 +149,18 @@ public class Lane extends BaseLane {
     }
 
     public void operate() {
-        while (true) {
+        while (BaseLane.isRunning()) {
             try {
-                while (BaseLane.isPaused()) {
+                while (BaseLane.isPaused() && BaseLane.isRunning()) {
                     synchronized (pauseLock) {
                         pauseLock.wait();
                     }
                 }
+
+                if (!BaseLane.isRunning()) {
+                    break;
+                }
+
                 switch (this.trafficLight.getColor()) {
                     case "GREEN" -> this.greenFlow();
                     case "YELLOW" -> this.yellowFlow();

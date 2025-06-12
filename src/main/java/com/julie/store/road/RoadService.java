@@ -13,6 +13,7 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 
@@ -28,6 +29,9 @@ public class RoadService {
     private final CenterArea centerArea;
     private final ScheduledExecutorService executorService;
     private volatile boolean paused = false;
+
+    private ScheduledFuture<?> vehicleTask;
+    private ScheduledFuture<?> emergencyTask;
 
 
     private String level = "Normal";
@@ -392,29 +396,81 @@ public class RoadService {
     public void pauseAllLanes() {
         paused = true;
         BaseLane.setPaused(true);
+        TrafficLight.setPaused(true);
         centerArea.setPaused(true);
     }
 
     public void resumeAllLanes() {
         paused = false;
         BaseLane.setPaused(false);
+        TrafficLight.setPaused(false);
         centerArea.setPaused(false);
+    }
+
+    //This part contains reset logic
+    public void stopComponents() {
+        north.clean();
+        east.clean();
+        south.clean();
+        west.clean();
+        centerArea.clear();
+
+        // Cancel tasks
+        if (vehicleTask != null) {
+            vehicleTask.cancel(true);
+            vehicleTask = null;
+        }
+        if (emergencyTask != null) {
+            emergencyTask.cancel(true);
+            emergencyTask = null;
+        }
+    }
+
+    public void resetTrafficLights() {
+        System.out.println("Restart Traffic Light");
+        north.getLight().reset("GREEN", 7, 0);
+        east.getLight().reset("RED", 30, 20);
+        south.getLight().reset("RED", 30, 10);
+        west.getLight().reset("RED", 30, 0);
+        TrafficLight.setRunning(true);
+    }
+
+    public void reset() {
+        System.out.println("Hi i called reset");
+        stopComponents();
+        System.out.println("I cleaned all vehicles: " + getCarsForChangeSpeed().size() );
+        TrafficLight.setRunning(false);
+        BaseLane.setRunning(false);
+        centerArea.setRunning(false);
+
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        level = "Normal";
+        density = "Normal";
+        BaseLane.setRunning(true);
+        centerArea.setRunning(true);
+        resetTrafficLights();
+        startSimulation();
     }
 
 
     public void startSimulation() {
-        executorService.scheduleAtFixedRate(() -> {
+        vehicleTask = executorService.scheduleAtFixedRate(() -> {
             if (!paused) {
                 randomAddVehicle();
             }
         }, 0, 100, TimeUnit.MILLISECONDS);
 
-        executorService.scheduleAtFixedRate(() -> {
+        emergencyTask = executorService.scheduleAtFixedRate(() -> {
             if (!paused) {
                 resumeAfterEmergency();
             }
         }, 0, 300, TimeUnit.MILLISECONDS);
-        ;
+
         simulationLauncher.startCountdown(north.getLight());
         simulationLauncher.startCountdown(east.getLight());
         simulationLauncher.startCountdown(south.getLight());

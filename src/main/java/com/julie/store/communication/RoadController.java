@@ -40,10 +40,13 @@ public class RoadController {
     @PostMapping("/monitor")
     public void setMonitor(@RequestBody Map<String, String> request) {
         String newStatus = request.get("status");
+        System.out.println("Frontend send me status: " + newStatus);
         if (newStatus.equals("Pause")) {
             roadService.pauseAllLanes();
-        } else {
+        } else if (newStatus.equals("Resume")) {
             roadService.resumeAllLanes();
+        } else {
+            roadService.reset();
         }
     }
 }

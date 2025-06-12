@@ -18,6 +18,8 @@ public class EmergencyLane extends BaseLane {
         return new ArrayList<>(this.lane);
     }
 
+    public void clear() { lane.clear(); }
+
     public void addVehicle(Vehicle vehicle) {
         this.lane.offer(vehicle); // or lane.add(vehicle) - both work the same
     }
@@ -80,13 +82,18 @@ public class EmergencyLane extends BaseLane {
 
 
     public void operate() {
-        while (true) {
+        while (BaseLane.isRunning()) {
             try {
-                while (BaseLane.isPaused()) {
+                while (BaseLane.isPaused() && BaseLane.isRunning()) {
                     synchronized (pauseLock) {
                         pauseLock.wait();
                     }
                 }
+                // Exit if no longer running (could have changed during pause)
+                if (!BaseLane.isRunning()) {
+                    break;
+                }
+
                 flow();
                 Thread.sleep(100);
             } catch (InterruptedException e) {
