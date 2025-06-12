@@ -30,6 +30,7 @@ public class RoadService {
     private final ScheduledExecutorService executorService;
 
     private String level = "Normal";
+    private String density = "Normal";
 
     public RoadService(CenterArea centerArea, SimulationLauncher simulationLauncher) {
         this.centerArea = centerArea;
@@ -42,12 +43,19 @@ public class RoadService {
     }
 
     public void randomAddVehicle() {
-        boolean[] weightedProb = { true, false};
-        boolean add = weightedProb[random.nextInt(weightedProb.length)];
+        //Random prob of adding with weighted
+        ArrayList<Boolean> weightedProb = new ArrayList<Boolean>();
+        for (int i = 0; i < getWeightedDensity(); i++) {
+            weightedProb.add(false);
+        }
+        weightedProb.add(true);
+
+        boolean add = weightedProb.get(random.nextInt(weightedProb.size()));
         if (!add) {
             return;
         }
 
+        //Random Goal and Position
         List<Road> allRoads = List.of(north, east, south, west);
         Road sourceRoad = allRoads.get(random.nextInt(allRoads.size()));
 
@@ -60,6 +68,8 @@ public class RoadService {
         int newX, newY;
         int indexRoad = size.ordinal();
         int relationship = (indexRoad - goalRoad.getRoadSize().ordinal() + 4) % 4;
+
+        //Random Car type with weighted
         ArrayList<Integer> weightedNumbers = new ArrayList<Integer>();
 
         for (int value = 0; value < 6; value++) {
@@ -67,7 +77,6 @@ public class RoadService {
                 weightedNumbers.add(value);
             }
         }
-
         weightedNumbers.add(6);
         weightedNumbers.add(7);
         weightedNumbers.add(8);
@@ -75,6 +84,7 @@ public class RoadService {
         int indexCar = weightedNumbers.get(random.nextInt(weightedNumbers.size()));
         boolean isEmergency = indexCar == 6 || indexCar == 7 || indexCar == 8;
 
+        //Put in correct lane
         if (indexRoad == 0) {
             if (isEmergency) {
                 newX = size.getXLeft() + 50;
@@ -310,7 +320,6 @@ public class RoadService {
 
     public void setLevel(String newLevel) {
         if (!newLevel.equals(this.level)) {
-//            System.out.println("At line 312, current level is: " + level);
             updateAllVehicleSpeeds(newLevel);
             this.level = newLevel;
         }
@@ -368,6 +377,19 @@ public class RoadService {
         }
     }
 
+    //This part contains code for updating density
+    public void setDensity(String newDensity) {
+        this.density = newDensity;
+    }
+
+    public int getWeightedDensity() {
+        return switch (this.density) {
+            case "Normal" -> 4;
+            case "Sparse" -> 12;
+            default -> 1;
+        };
+    }
+
     public void startSimulation() {
 
         executorService.scheduleAtFixedRate(this::randomAddVehicle, 0, 100, TimeUnit.MILLISECONDS);
@@ -414,18 +436,18 @@ public class RoadService {
         simulationLauncher.startInboundLane(west.getLane1());
         simulationLauncher.startInboundLane(west.getLane2());
 
-        executorService.scheduleAtFixedRate(() -> {
-            centerArea.printAllVehiclesInfo();
-            north.getLane1().printAllVehiclesInfo();
-            north.getLane2().printAllVehiclesInfo();
-            east.getLane1().printAllVehiclesInfo();
-            east.getLane2().printAllVehiclesInfo();
-            south.getLane1().printAllVehiclesInfo();
-            south.getLane2().printAllVehiclesInfo();
-            west.getLane1().printAllVehiclesInfo();
-            west.getLane2().printAllVehiclesInfo();
-            System.out.println("--------------------------------------");
-        }, 0, 100, TimeUnit.MILLISECONDS);
+//        executorService.scheduleAtFixedRate(() -> {
+//            centerArea.printAllVehiclesInfo();
+//            north.getLane1().printAllVehiclesInfo();
+//            north.getLane2().printAllVehiclesInfo();
+//            east.getLane1().printAllVehiclesInfo();
+//            east.getLane2().printAllVehiclesInfo();
+//            south.getLane1().printAllVehiclesInfo();
+//            south.getLane2().printAllVehiclesInfo();
+//            west.getLane1().printAllVehiclesInfo();
+//            west.getLane2().printAllVehiclesInfo();
+//            System.out.println("--------------------------------------");
+//        }, 0, 100, TimeUnit.MILLISECONDS);
 
     }
 

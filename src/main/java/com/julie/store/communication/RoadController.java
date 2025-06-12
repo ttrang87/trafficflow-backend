@@ -30,4 +30,10 @@ public class RoadController {
         String newLevel = request.get("level");
         roadService.setLevel(newLevel);
     }
+
+    @PostMapping("/set-density-level")
+    public void setDensityLevel(@RequestBody Map<String, String> request) {
+        String newDensity = request.get("density");
+        roadService.setDensity(newDensity);
+    }
 }
