@@ -15,7 +15,6 @@ public class EmergencyLane extends BaseLane {
     }
 
     public List<Vehicle> getLane() {
-        // CHANGE 2: Convert queue to list for compatibility
         return new ArrayList<>(this.lane);
     }
 
@@ -83,6 +82,11 @@ public class EmergencyLane extends BaseLane {
     public void operate() {
         while (true) {
             try {
+                while (BaseLane.isPaused()) {
+                    synchronized (pauseLock) {
+                        pauseLock.wait();
+                    }
+                }
                 flow();
                 Thread.sleep(100);
             } catch (InterruptedException e) {

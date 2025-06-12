@@ -11,6 +11,7 @@ public class TrafficLight {
     private String keepColor;
     private int keepCount;
     private volatile boolean isEmergency = false;
+    protected volatile boolean paused = false;
 
     public TrafficLight(String color, int second, int count) {
         this.color = color;
@@ -36,19 +37,27 @@ public class TrafficLight {
         this.count = keepCount;
     }
 
+    public void setPaused(boolean paused) {
+        this.paused = paused;
+    }
+
     public void countDown() {
         while (true) {
-            if (!isEmergency) {
-                this.count += 1;
-                if (count == this.second) {
-                    switch (this.color) {
-                        case "GREEN" -> this.changeGreen();
-                        case "YELLOW" -> this.changeYellow();
-                        default -> this.changeRed();
+            try {
+                if (paused) {
+                    Thread.sleep(100); // Sleep while paused
+                    continue;
+                }
+                if (!isEmergency) {
+                    this.count += 1;
+                    if (count == this.second) {
+                        switch (this.color) {
+                            case "GREEN" -> this.changeGreen();
+                            case "YELLOW" -> this.changeYellow();
+                            default -> this.changeRed();
+                        }
                     }
                 }
-            }
-            try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

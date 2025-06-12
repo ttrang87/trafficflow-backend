@@ -36,4 +36,14 @@ public class RoadController {
         String newDensity = request.get("density");
         roadService.setDensity(newDensity);
     }
+
+    @PostMapping("/monitor")
+    public void setMonitor(@RequestBody Map<String, String> request) {
+        String newStatus = request.get("status");
+        if (newStatus.equals("Pause")) {
+            roadService.pauseAllLanes();
+        } else {
+            roadService.resumeAllLanes();
+        }
+    }
 }

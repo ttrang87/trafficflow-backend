@@ -10,6 +10,8 @@ import java.util.List;
 public abstract class BaseLane {
     protected final RoadSize size;
     protected final CenterArea centerArea;
+    protected static final Object pauseLock = new Object();
+    protected static volatile boolean paused = false;
 
     public BaseLane(RoadSize size, CenterArea centerArea) {
         this.size = size;
@@ -22,6 +24,18 @@ public abstract class BaseLane {
     public abstract void operate();
     public abstract Vehicle getLastVehicle();
 
+    public static void setPaused(boolean paused) {
+        synchronized (pauseLock) {
+            BaseLane.paused = paused;
+            if (!paused) {
+                pauseLock.notifyAll(); // Wake up waiting thread(s)
+            }
+        }
+    }
+
+    public static boolean isPaused() {
+        return paused;
+    }
     // Common method for calculating separation distance
     protected int calculateSeparationDistance(Vehicle current, Vehicle front) {
         int dx = Math.abs(current.getX() - front.getX());

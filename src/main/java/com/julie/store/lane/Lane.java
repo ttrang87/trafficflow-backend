@@ -13,10 +13,12 @@ public class Lane extends BaseLane {
     private final ConcurrentLinkedDeque<Vehicle> lane = new ConcurrentLinkedDeque<>();
     private final TrafficLight trafficLight;
 
+
     public Lane(RoadSize size, TrafficLight trafficLight, CenterArea centerArea) {
         super(size, centerArea);
         this.trafficLight = trafficLight;
     }
+
 
     public List<Vehicle> getLane() {
         return new ArrayList<>(this.lane);
@@ -147,6 +149,11 @@ public class Lane extends BaseLane {
     public void operate() {
         while (true) {
             try {
+                while (BaseLane.isPaused()) {
+                    synchronized (pauseLock) {
+                        pauseLock.wait();
+                    }
+                }
                 switch (this.trafficLight.getColor()) {
                     case "GREEN" -> this.greenFlow();
                     case "YELLOW" -> this.yellowFlow();

@@ -13,6 +13,9 @@ import java.util.List;
 public class CenterArea {
     // CHANGE: Use Collections.synchronizedList with LinkedList
     private final List<Vehicle> centerArea = Collections.synchronizedList(new LinkedList<>());
+    protected final Object pauseLock = new Object();
+    protected volatile boolean paused = false;
+
 
     public void addVehicle(Vehicle vehicle) {
         centerArea.add(vehicle); // Adds to end - O(1) for LinkedList
@@ -134,22 +137,6 @@ public class CenterArea {
         return totalSpeed / centerArea.size();
     }
 
-//    public double calculateAverageWaitTime() {
-//        if (centerArea.isEmpty()) return 0.0;
-//
-//        int totalWaitTime = 0;
-//        int count = 0;
-//        for (Vehicle v : centerArea) {
-//            if (v.getWaitTime() > 0) {
-//                totalWaitTime += v.getWaitTime();
-//                count ++;
-//            }
-//        }
-//
-//        if (count == 0) return 0.0;
-//        return (double) totalWaitTime / count;
-//    }
-
     public void printAllVehiclesInfo() {
         System.out.println("---- Vehicles in CenterArea ----");
         synchronized (centerArea) {
@@ -163,9 +150,23 @@ public class CenterArea {
         System.out.println("-------------------------------");
     }
 
+    public void setPaused(boolean paused) {
+        synchronized (pauseLock) {
+            this.paused = paused;
+            if (!paused) {
+                pauseLock.notifyAll(); // Wake up waiting thread(s)
+            }
+        }
+    }
+
     public void operate() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
+                synchronized (pauseLock) {
+                    while (paused) {
+                        pauseLock.wait(); // 🚧 Block until resumed
+                    }
+                }
                 updateAllDangerousDistances();
 
                 // FIXED: Proper iterator removal with synchronized list

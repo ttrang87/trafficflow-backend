@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -28,6 +27,8 @@ public class RoadService {
     private final Random random = new Random();
     private final CenterArea centerArea;
     private final ScheduledExecutorService executorService;
+    private volatile boolean paused = false;
+
 
     private String level = "Normal";
     private String density = "Normal";
@@ -194,11 +195,8 @@ public class RoadService {
                 return false;
             }
         }
-
         return true;
     }
-
-
 
     public void resumeAfterEmergency() {
         if (checkAllEmergencyVehicles() ) {
@@ -390,10 +388,33 @@ public class RoadService {
         };
     }
 
-    public void startSimulation() {
+    //This part contains pause/resume threads logic with lock
+    public void pauseAllLanes() {
+        paused = true;
+        BaseLane.setPaused(true);
+        centerArea.setPaused(true);
+    }
 
-        executorService.scheduleAtFixedRate(this::randomAddVehicle, 0, 100, TimeUnit.MILLISECONDS);
-        executorService.scheduleAtFixedRate(this::resumeAfterEmergency, 0, 300, TimeUnit.MILLISECONDS);
+    public void resumeAllLanes() {
+        paused = false;
+        BaseLane.setPaused(false);
+        centerArea.setPaused(false);
+    }
+
+
+    public void startSimulation() {
+        executorService.scheduleAtFixedRate(() -> {
+            if (!paused) {
+                randomAddVehicle();
+            }
+        }, 0, 100, TimeUnit.MILLISECONDS);
+
+        executorService.scheduleAtFixedRate(() -> {
+            if (!paused) {
+                resumeAfterEmergency();
+            }
+        }, 0, 300, TimeUnit.MILLISECONDS);
+        ;
         simulationLauncher.startCountdown(north.getLight());
         simulationLauncher.startCountdown(east.getLight());
         simulationLauncher.startCountdown(south.getLight());

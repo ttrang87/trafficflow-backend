@@ -240,6 +240,11 @@ public class InboundLane extends BaseLane{
     public void operate() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
+                while (BaseLane.isPaused()) {
+                    synchronized (pauseLock) {
+                        pauseLock.wait();
+                    }
+                }
                 updateAllDangerousDistances();
                 flow();
                 attemptChange();
