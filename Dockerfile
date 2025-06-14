@@ -6,6 +6,9 @@ COPY pom.xml .
 COPY mvnw .
 COPY .mvn .mvn
 
+# Fix mvnw permissions
+RUN chmod +x ./mvnw
+
 RUN ./mvnw dependency:resolve
 
 COPY . .
