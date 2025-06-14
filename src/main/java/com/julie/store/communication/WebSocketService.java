@@ -26,8 +26,13 @@ public class WebSocketService {
     }
 
     @Scheduled(fixedRate = 100)
-    public void sendTotalVehicles() {
+    public void sendLiveVehicles() {
         messagingTemplate.convertAndSend("/topic/number-of-vehicles", roadService.getCountCar());
+    }
+
+    @Scheduled(fixedRate = 100)
+    public void sendTotalVehicles() {
+        messagingTemplate.convertAndSend("/topic/total-number-of-vehicles", roadService.getTotalVehicle());
     }
 
     @Scheduled(fixedRate = 1000)

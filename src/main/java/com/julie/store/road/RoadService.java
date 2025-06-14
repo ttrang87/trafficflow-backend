@@ -29,6 +29,7 @@ public class RoadService {
     private final CenterArea centerArea;
     private final ScheduledExecutorService executorService;
     private volatile boolean paused = false;
+    private int totalVehicle = 0;
 
     private ScheduledFuture<?> vehicleTask;
     private ScheduledFuture<?> emergencyTask;
@@ -145,6 +146,7 @@ public class RoadService {
 
 
         if (check) {
+            totalVehicle ++;
             Vehicle newVehicle = new Vehicle(newX, newY, sourceRoad, goalRoad, CarBrand.values()[indexCar]);
             modifyNewVehicleSpeed(newVehicle);  //modify speed right after creating to fit with system
             if (isEmergency) {
@@ -285,6 +287,10 @@ public class RoadService {
         count += west.getCombinedLaneVehicles().size();
         count += centerArea.getCenterArea().size();
         return count;
+    }
+
+    public int getTotalVehicle() {
+        return totalVehicle;
     }
 
     public double getAvgSpeed() {
@@ -453,6 +459,7 @@ public class RoadService {
         }
         level = "Normal";
         density = "Normal";
+        totalVehicle = 0;
         BaseLane.setRunning(true);
         centerArea.setRunning(true);
         resetTrafficLights();
