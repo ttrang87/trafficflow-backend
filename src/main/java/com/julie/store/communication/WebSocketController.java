@@ -23,4 +23,14 @@ public class WebSocketController {
         }
     }
 
+    @PostMapping("/disconnect")
+    public ResponseEntity<String> stopSimulation() {
+        try {
+            webSocketService.stopSimulation();
+            return ResponseEntity.ok("Simulation stopped successfully");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Failed to stop simulation: " + e.getMessage());
+        }
+    }
+
 }

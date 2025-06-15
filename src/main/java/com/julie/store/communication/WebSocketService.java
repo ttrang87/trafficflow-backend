@@ -21,9 +21,18 @@ public class WebSocketService {
     public void startSimulation() {
         if (!simulationActive) {
             System.out.println("🚦 Starting traffic simulation via REST API...");
-            roadService.startSimulation();
+            roadService.reset();
             simulationActive = true;
             System.out.println("✅ Simulation started, WebSocket scheduling enabled");
+        }
+    }
+
+    public void stopSimulation() {
+        if (simulationActive) {
+            System.out.println("🛑 Stopping traffic simulation...");
+            simulationActive = false;
+            roadService.stopComponents();
+            System.out.println("✅ Simulation stopped, WebSocket scheduling disabled");
         }
     }
 

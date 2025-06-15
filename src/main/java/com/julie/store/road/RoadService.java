@@ -433,6 +433,10 @@ public class RoadService {
             emergencyTask.cancel(true);
             emergencyTask = null;
         }
+
+        TrafficLight.setRunning(false);
+        BaseLane.setRunning(false);
+        centerArea.setRunning(false);
     }
 
     public void resetTrafficLights() {
@@ -448,9 +452,6 @@ public class RoadService {
 
     public void reset() {
         stopComponents();
-        TrafficLight.setRunning(false);
-        BaseLane.setRunning(false);
-        centerArea.setRunning(false);
 
         try {
             Thread.sleep(1000);
