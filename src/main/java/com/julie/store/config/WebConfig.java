@@ -14,7 +14,7 @@ public class WebConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")  // allow all endpoints
-                        .allowedOrigins("http://localhost:5173", "https://trafficflow-delta.vercel.app/")  // allow this frontend origin
+                        .allowedOrigins("http://localhost:5173", "https://trafficflow-orpin.vercel.app/")  // allow this frontend origin
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // allowed HTTP methods
                         .allowCredentials(true);  // if you need to send cookies, else can remove
             }
